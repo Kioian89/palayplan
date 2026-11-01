@@ -1,0 +1,41 @@
+# Secrets & Environment variables
+**/.env
+**/.env.*
+!**/.env.example
+
+# Flutter / Dart
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+
+# Android
+**/android/local.properties
+**/android/.gradle/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/*.keystore
+**/*.jks
+**/android/key.properties
+
+# Python / Backend
+**/__pycache__/
+**/*.py[cod]
+**/.venv/
+**/env/
+**/venv/
+**/.pytest_cache/
+
+# IDE / Editor
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+Thumbs.db
+*.log
+
