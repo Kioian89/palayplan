@@ -27,6 +27,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(SettingsScreen), findsOneWidget);
+
+    // The guest text may be below the fold after the new Contact section was
+    // added. Scroll down to make sure it is visible.
+    await tester.scrollUntilVisible(
+      find.text('You are using PalayPlan as a guest'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('You are using PalayPlan as a guest'), findsOneWidget);
   });
 

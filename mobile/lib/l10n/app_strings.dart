@@ -436,6 +436,20 @@ class AppStrings {
       'Could not sign out. Please try again.',
       'Hindi makapag-sign out. Subukan muli.',
       'Dili maka-sign out. Sulayi pag-usab.');
+  String get settingsContact =>
+      _pick('Contact & Support', 'Kontak at Suporta', 'Kontak ug Suporta');
+  String get settingsContactTitle =>
+      _pick('Email Developer', 'I-email ang Developer', 'I-email ang Developer');
+  String get settingsContactSubtitle => _pick(
+        'Send inquiries or feedback to banquiladrian@gmail.com',
+        'Magpadala ng katanungan o feedback sa banquiladrian@gmail.com',
+        'Magpadala og mga pangutana o feedback sa banquiladrian@gmail.com',
+      );
+  String get settingsContactCopied => _pick(
+        'Email copied to clipboard (banquiladrian@gmail.com)',
+        'Nakopya ang email sa clipboard (banquiladrian@gmail.com)',
+        'Nakopya ang email sa clipboard (banquiladrian@gmail.com)',
+      );
 
   // ── Privacy Policy ─────────────────────────────────────────────────────────
   String get privacyTitle =>

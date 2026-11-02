@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_strings.dart';
@@ -49,6 +50,39 @@ class SettingsScreen extends StatelessWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(strings.settingsSignOutError)),
+      );
+    }
+  }
+
+  Future<void> _contactSupport(BuildContext context) async {
+    const email = 'banquiladrian@gmail.com';
+    final strings = AppStrings.of(context);
+    final emailUri = Uri(
+      scheme: 'mailto',
+      path: email,
+      queryParameters: {
+        'subject': 'PalayPlan Inquiry / Feedback',
+      },
+    );
+
+    bool launched = false;
+    try {
+      launched = await launchUrl(
+        emailUri,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (_) {
+      launched = false;
+    }
+
+    if (!launched && context.mounted) {
+      await Clipboard.setData(const ClipboardData(text: email));
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(strings.settingsContactCopied),
+          duration: const Duration(seconds: 4),
+        ),
       );
     }
   }
@@ -136,6 +170,18 @@ class SettingsScreen extends StatelessWidget {
                     builder: (_) => const PrivacyPolicyScreen(),
                   ),
                 ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _SettingsGroup(
+              title: strings.settingsContact,
+              child: ListTile(
+                minVerticalPadding: 12,
+                leading: const _SettingsIcon(icon: Icons.mail_outline_rounded),
+                title: Text(strings.settingsContactTitle),
+                subtitle: Text(strings.settingsContactSubtitle),
+                trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+                onTap: () => _contactSupport(context),
               ),
             ),
             const SizedBox(height: 16),
