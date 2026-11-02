@@ -60,3 +60,4 @@ All community leaders are obligated to respect the privacy and security of the r
 ## Attribution
 
 This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org), version 2.1, with agricultural and regional standards tailored for the PalayPlan community.
+

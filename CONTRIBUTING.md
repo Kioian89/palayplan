@@ -136,3 +136,4 @@ When reporting issues, please use our GitHub Issue templates:
 - Provide Android device model & OS version.
 - Note field parameters (variety name, growth stage day, municipality/province).
 - Include terminal logs or screenshots where applicable.
+

@@ -35,3 +35,4 @@ PalayPlan is designed with privacy and offline independence at its core:
 - Field coordinates and crop schedule dates are stored locally on the farmer's device (`SharedPreferences`).
 - No farm location or harvest yield data is sold, monetized, or shared with third-party advertisers.
 - OpenStreetMap and Zoom Earth integrations operate via client-side rendering without storing farmer identity on map tile servers.
+
