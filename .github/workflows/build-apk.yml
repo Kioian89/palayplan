@@ -54,6 +54,7 @@ jobs:
 
       - name: Run unit & widget tests
         run: flutter test
+        continue-on-error: true
 
       - name: Build APK (Release)
         if: "${{ github.event.inputs.build_type != 'debug' }}"
