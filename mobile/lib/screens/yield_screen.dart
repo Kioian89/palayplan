@@ -20,6 +20,7 @@ class _YieldScreenState extends State<YieldScreen> {
   bool _loading = false;
   Map<String, dynamic>? _result;
   String? _error;
+  String? _selectedEcosystem; // null = Auto/Blend, 'irrigated', 'rainfed'
 
   @override
   void dispose() {
@@ -43,6 +44,7 @@ class _YieldScreenState extends State<YieldScreen> {
         municipality: field.municipality,
         lat: field.latitude,
         lon: field.longitude,
+        ecosystemType: _selectedEcosystem,
       );
       if (mounted) {
         setState(() {
@@ -80,6 +82,15 @@ class _YieldScreenState extends State<YieldScreen> {
           children: [
             // ── Field Summary Card ────────────────────────────────────────────
             _FieldSummaryCard(field: field),
+            const SizedBox(height: 16),
+
+            // ── Water / Ecosystem Source Selector ─────────────────────────────
+            _EcosystemSelectorCard(
+              selected: _selectedEcosystem,
+              onChanged: (val) {
+                setState(() => _selectedEcosystem = val);
+              },
+            ),
             const SizedBox(height: 20),
 
             // ── Estimate Button ───────────────────────────────────────────────
@@ -704,6 +715,144 @@ class _ErrorCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Water / Ecosystem Type Selector Card
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _EcosystemSelectorCard extends StatelessWidget {
+  final String? selected;
+  final ValueChanged<String?> onChanged;
+
+  const _EcosystemSelectorCard({
+    required this.selected,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.water_drop_outlined, size: 16, color: Color(0xFF2E7D32)),
+              SizedBox(width: 6),
+              Text(
+                'Water / Ecosystem Type',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF374151),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _buildOption(
+                label: 'Auto',
+                subtitle: 'Regional',
+                icon: Icons.auto_awesome,
+                value: null,
+              ),
+              const SizedBox(width: 8),
+              _buildOption(
+                label: 'Irrigated',
+                subtitle: 'Tubigan',
+                icon: Icons.water,
+                value: 'irrigated',
+              ),
+              const SizedBox(width: 8),
+              _buildOption(
+                label: 'Rainfed',
+                subtitle: 'Sahod Ulan',
+                icon: Icons.cloud,
+                value: 'rainfed',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOption({
+    required String label,
+    required String subtitle,
+    required IconData icon,
+    required String? value,
+  }) {
+    final isSelected = selected == value;
+    return Expanded(
+      child: InkWell(
+        onTap: () => onChanged(value),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 6),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? const Color(0xFF2E7D32).withValues(alpha: 0.1)
+                : const Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? const Color(0xFF2E7D32)
+                  : const Color(0xFFE5E7EB),
+              width: isSelected ? 1.5 : 1.0,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isSelected
+                    ? const Color(0xFF2E7D32)
+                    : const Color(0xFF6B7280),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                  color: isSelected
+                      ? const Color(0xFF1B5E20)
+                      : const Color(0xFF374151),
+                ),
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: isSelected
+                      ? const Color(0xFF2E7D32)
+                      : const Color(0xFF9CA3AF),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

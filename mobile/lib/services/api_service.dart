@@ -138,23 +138,28 @@ class ApiService {
     required double lat,
     required double lon,
     String? soilType,
+    String? ecosystemType,
   }) async {
     final uri = Uri.parse('$baseUrl/predict/yield').replace(queryParameters: {
       'lat': lat.toString(),
       'lon': lon.toString(),
     });
+    final payload = <String, dynamic>{
+      'seed_variety': seedVariety,
+      'days_to_maturity': daysToMaturity,
+      'field_size_hectares': fieldSizeHectares,
+      'start_date': startDate.toIso8601String().split('T').first,
+      'municipality': municipality,
+      'soil_type': soilType,
+    };
+    if (ecosystemType != null && ecosystemType.isNotEmpty) {
+      payload['ecosystem_type'] = ecosystemType;
+    }
     final response = await _client
         .post(
           uri,
           headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'seed_variety': seedVariety,
-            'days_to_maturity': daysToMaturity,
-            'field_size_hectares': fieldSizeHectares,
-            'start_date': startDate.toIso8601String().split('T').first,
-            'municipality': municipality,
-            'soil_type': soilType,
-          }),
+          body: jsonEncode(payload),
         )
         .timeout(_requestTimeout);
     if (response.statusCode != 200) {
