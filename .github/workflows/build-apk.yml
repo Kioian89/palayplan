@@ -71,7 +71,7 @@ jobs:
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
         run: |
-          shorebird patch android --force \
+          shorebird patch android \
             --dart-define=API_BASE_URL=https://palayplan.onrender.com
 
       - name: Build APK (Release / Shorebird)
@@ -81,7 +81,7 @@ jobs:
         run: |
           if [ -n "$SHOREBIRD_TOKEN" ] && ([ "${{ startsWith(github.ref, 'refs/tags/v') }}" = "true" ] || [ "${{ github.event.inputs.build_type }}" = "release" ]); then
             echo "Building with Shorebird release..."
-            shorebird release android --artifact=apk --force \
+            shorebird release android --artifact apk \
               --dart-define=API_BASE_URL=https://palayplan.onrender.com
           else
             echo "Building standard release APK..."
