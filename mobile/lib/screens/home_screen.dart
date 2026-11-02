@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/weather_model.dart';
@@ -78,79 +77,21 @@ class _HomeScreenState extends State<HomeScreen> {
       s.filterAll,
       s.filterVeg,
       s.filterWeather,
-      s.filterAdvisory
+      s.filterAdvisory,
     ];
     final langShort = s.lang == AppLanguage.english
         ? 'EN'
         : s.lang == AppLanguage.filipino
             ? 'FIL'
             : 'CEB';
-    final quickAccessCards = [
-      _FeatureCard(
-        icon: Icons.wb_cloudy_rounded,
-        title: s.navWeather,
-        value: s.featWeatherBadge,
-        gradient: const LinearGradient(
-          colors: [Color(0xFF4FC3F7), Color(0xFF0288D1)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const WeatherScreen()),
-        ),
-      ),
-      _FeatureCard(
-        icon: Icons.calendar_month_rounded,
-        title: s.navCalendar,
-        value: s.featCalendarBadge,
-        gradient: const LinearGradient(
-          colors: [Color(0xFF81C784), Color(0xFF388E3C)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const CalendarScreen()),
-        ),
-      ),
-      _FeatureCard(
-        icon: Icons.science_rounded,
-        title: s.featFertilizer,
-        value: s.featFertilizerBadge,
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFB74D), Color(0xFFE65100)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const CalendarScreen()),
-        ),
-      ),
-      _FeatureCard(
-        icon: Icons.shield_rounded,
-        title: s.navAdvisory,
-        value: _loading ? '…' : '${_todayAdvisories.length}',
-        gradient: const LinearGradient(
-          colors: [Color(0xFFEF9A9A), Color(0xFFB71C1C)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const AdvisoryScreen()),
-        ),
-      ),
-    ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F6F2),
+      backgroundColor: const Color(0xFFF7F8FA),
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(
           onRefresh: _loadAdvisories,
-          color: const Color(0xFFFF7E55),
+          color: const Color(0xFF2E7D32),
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),
@@ -160,134 +101,200 @@ class _HomeScreenState extends State<HomeScreen> {
                 SliverToBoxAdapter(
                   child: OfflineDataNotice(savedAt: _dataSavedAt!),
                 ),
-              // Top Bar
+
+              // ── Top Header Bar ───────────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                  padding: const EdgeInsets.fromLTRB(20, 14, 16, 8),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _CircleIconButton(
-                        icon: Icons.grain_rounded,
-                        iconColor: const Color(0xFFFF7E55),
-                        onTap: () => LanguagePickerSheet.show(context),
-                      ),
-                      GestureDetector(
-                        onTap: () => EditFieldSheet.show(context),
-                        child: Column(
-                          children: [
-                            Text(
-                              s.homeTitle,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF1B2128),
-                              ),
-                            ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.location_on,
-                                    size: 12, color: Color(0xFFFF7E55)),
-                                const SizedBox(width: 2),
-                                Text(
-                                  field.locationDisplay,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF8A9099),
+                      // Logo & Field Location Selector
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => EditFieldSheet.show(context),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 42,
+                                height: 42,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.08),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.asset(
+                                    'assets/icons/app_logo.png',
+                                    fit: BoxFit.cover,
                                   ),
                                 ),
-                                const SizedBox(width: 2),
-                                const Icon(Icons.keyboard_arrow_down_rounded,
-                                    size: 14, color: Color(0xFFFF7E55)),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Language Switcher Pill
-                          GestureDetector(
-                            onTap: () => LanguagePickerSheet.show(context),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border:
-                                    Border.all(color: const Color(0xFFE5E7EB)),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.04),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
                               ),
-                              child: Row(
+                              const SizedBox(width: 10),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.language_rounded,
-                                      size: 15, color: Color(0xFFFF7E55)),
-                                  const SizedBox(width: 4),
                                   Text(
-                                    langShort,
+                                    s.homeTitle,
                                     style: const TextStyle(
-                                      fontSize: 11.5,
+                                      fontSize: 16,
                                       fontWeight: FontWeight.w800,
                                       color: Color(0xFF191D24),
-                                      letterSpacing: 0.5,
+                                      letterSpacing: -0.2,
                                     ),
+                                  ),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.location_on_rounded,
+                                        size: 13,
+                                        color: Color(0xFF2E7D32),
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        field.locationDisplay,
+                                        style: const TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF5A6270),
+                                        ),
+                                      ),
+                                      const Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        size: 14,
+                                        color: Color(0xFF5A6270),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          _CircleIconButton(
-                            icon: Icons.notifications_none_rounded,
-                            iconColor: const Color(0xFF1B2128),
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const AdvisoryScreen()),
-                            ),
+                        ),
+                      ),
+
+                      // Language Switcher Pill
+                      GestureDetector(
+                        onTap: () => LanguagePickerSheet.show(context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
                           ),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            tooltip: AppStrings.of(context).settingsTitle,
-                            constraints: const BoxConstraints.tightFor(
-                              width: 48,
-                              height: 48,
-                            ),
-                            onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute<void>(
-                                builder: (_) => SettingsScreen(
-                                  authService: widget.authService,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.language_rounded,
+                                size: 14,
+                                color: Color(0xFF2E7D32),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                langShort,
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF191D24),
                                 ),
                               ),
-                            ),
-                            icon: const Icon(
-                              Icons.settings_outlined,
-                              color: Color(0xFF1B2128),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+
+                      // Notification Icon
+                      _CircleActionBtn(
+                        icon: Icons.notifications_none_rounded,
+                        badge: _todayAdvisories.isNotEmpty
+                            ? '${_todayAdvisories.length}'
+                            : null,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AdvisoryScreen(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+
+                      // Settings Icon with Tooltip
+                      IconButton(
+                        tooltip: s.settingsTitle,
+                        constraints: const BoxConstraints.tightFor(
+                          width: 40,
+                          height: 40,
+                        ),
+                        padding: EdgeInsets.zero,
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => SettingsScreen(
+                              authService: widget.authService,
                             ),
                           ),
-                        ],
+                        ),
+                        icon: Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.settings_outlined,
+                              size: 18,
+                              color: Color(0xFF374151),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
 
-              // Segmented Radial Arc Gauge Card
+              // ── Rice Field Spotlight Card (with Scan Leaf CTA) ───────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                  padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
+                  child: _HeroRiceFarmCard(s: s),
+                ),
+              ),
+
+              // ── Radial Crop Arc Gauge ────────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                   child: CropArcGauge(
                     currentDay: field.currentDay,
                     totalDays: field.daysToMaturity,
@@ -297,10 +304,131 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // Quick Filter Pills
+              // ── Section Title: Quick Access ──────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                  child: Text(
+                    s.fieldStatusTitle,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF191D24),
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ),
+              ),
+
+              // ── 2x2 Professional Rice Farm Feature Cards ──────────────────
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                sliver: SliverGrid(
+                  delegate: SliverChildListDelegate([
+                    _RiceFeatureCard(
+                      imagePath: 'assets/images/card_weather.jpg',
+                      icon: Icons.wb_cloudy_rounded,
+                      title: s.featWeather,
+                      subtitle: s.featWeatherBadge,
+                      accentColor: const Color(0xFF0277BD),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const WeatherScreen(),
+                        ),
+                      ),
+                    ),
+                    _RiceFeatureCard(
+                      imagePath: 'assets/images/card_calendar.jpg',
+                      icon: Icons.calendar_month_rounded,
+                      title: s.featCalendar,
+                      subtitle: s.featCalendarBadge,
+                      accentColor: const Color(0xFF2E7D32),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const CalendarScreen(),
+                        ),
+                      ),
+                    ),
+                    _RiceFeatureCard(
+                      imagePath: 'assets/images/card_scanner.jpg',
+                      icon: Icons.science_rounded,
+                      title: s.featFertilizer,
+                      subtitle: s.featFertilizerBadge,
+                      accentColor: const Color(0xFFE65100),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const CalendarScreen(),
+                        ),
+                      ),
+                    ),
+                    _RiceFeatureCard(
+                      imagePath: 'assets/images/card_advisory.jpg',
+                      icon: Icons.shield_rounded,
+                      title: s.featAdvisory,
+                      subtitle: _loading
+                          ? '…'
+                          : '${_todayAdvisories.length} ${s.navAdvisory}',
+                      accentColor: const Color(0xFF6A1B9A),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AdvisoryScreen(),
+                        ),
+                      ),
+                    ),
+                  ]),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.1,
+                  ),
+                ),
+              ),
+
+              // ── Advisories Filter Chips ──────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        s.advTitle,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF191D24),
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AdvisoryScreen(),
+                          ),
+                        ),
+                        child: Text(
+                          s.seeAll,
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2E7D32),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
               SliverToBoxAdapter(
                 child: SizedBox(
-                  height: 38,
+                  height: 36,
                   child: ListView.separated(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     scrollDirection: Axis.horizontal,
@@ -311,33 +439,39 @@ class _HomeScreenState extends State<HomeScreen> {
                       return GestureDetector(
                         onTap: () =>
                             setState(() => _selectedFilterIndex = index),
-                        child: Container(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 8),
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? const Color(0xFF191D24)
+                                ? const Color(0xFF2E7D32)
                                 : Colors.white,
                             borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected
+                                  ? const Color(0xFF2E7D32)
+                                  : const Color(0xFFE5E7EB),
+                            ),
                             boxShadow: [
                               if (!isSelected)
                                 BoxShadow(
                                   color: Colors.black.withValues(alpha: 0.03),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 1),
                                 ),
                             ],
                           ),
-                          child: Center(
-                            child: Text(
-                              filters[index],
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: isSelected
-                                    ? Colors.white
-                                    : const Color(0xFF4A505A),
-                              ),
+                          child: Text(
+                            filters[index],
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: isSelected
+                                  ? Colors.white
+                                  : const Color(0xFF4A505A),
                             ),
                           ),
                         ),
@@ -347,362 +481,287 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
-              // "Your Crops, Decoded By AI" Spotlight Hero Card — image-style
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (_, animation, __) => const ScanScreen(),
-                        transitionsBuilder: (_, animation, __, child) {
-                          final curved = CurvedAnimation(
-                            parent: animation,
-                            curve: Curves.easeOutCubic,
-                          );
-                          return SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, 1),
-                              end: Offset.zero,
-                            ).animate(curved),
-                            child:
-                                FadeTransition(opacity: curved, child: child),
-                          );
-                        },
-                        transitionDuration: const Duration(milliseconds: 320),
+              // ── Active Advisories List ───────────────────────────────────
+              if (_loading)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
                       ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(28),
-                      child: SizedBox(
-                        height: 210,
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            // Rice field gradient painting (no asset needed)
-                            CustomPaint(painter: _RiceFieldPainter()),
-
-                            // Overlay gradient for text legibility
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.black.withValues(alpha: 0.0),
-                                    Colors.black.withValues(alpha: 0.62),
-                                  ],
-                                  stops: const [0.35, 1.0],
-                                ),
-                              ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F5E9),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-
-                            // Top-right floating pill: accuracy badge
-                            Positioned(
-                              top: 14,
-                              right: 14,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.20),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.35),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.auto_awesome,
-                                        size: 13, color: Colors.white),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      s.accuracyBadge,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: 0.4,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            child: const Icon(
+                              Icons.sync_rounded,
+                              color: Color(0xFF2E7D32),
+                              size: 18,
                             ),
-
-                            // Top-left floating pill: on-device AI
-                            Positioned(
-                              top: 14,
-                              left: 14,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 11, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFF7E55)
-                                      .withValues(alpha: 0.88),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.memory_rounded,
-                                        size: 12, color: Colors.white),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      s.onDeviceAi,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                            // Bottom content
-                            Positioned(
-                              left: 18,
-                              right: 18,
-                              bottom: 18,
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          s.heroTitle,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w800,
-                                            height: 1.2,
-                                            shadows: [
-                                              Shadow(
-                                                color: Colors.black38,
-                                                blurRadius: 8,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 5),
-                                        Text(
-                                          s.heroSubtitle,
-                                          style: TextStyle(
-                                            color: Colors.white
-                                                .withValues(alpha: 0.82),
-                                            fontSize: 12,
-                                            height: 1.35,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  // Scan CTA button
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 11),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(20),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black
-                                              .withValues(alpha: 0.2),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(Icons.camera_alt_rounded,
-                                            size: 16, color: Color(0xFFFF7E55)),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          s.featScan,
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w800,
-                                            color: Color(0xFF192024),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Horizontal Quick-Access Feature Cards (reference design style)
-              SliverToBoxAdapter(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final useGrid = constraints.maxWidth >= 640;
-                    final cardWidth = useGrid
-                        ? (constraints.maxWidth - 76) / quickAccessCards.length
-                        : 152.0;
-                    final cards = <Widget>[];
-                    for (var index = 0;
-                        index < quickAccessCards.length;
-                        index++) {
-                      if (index > 0) {
-                        cards.add(const SizedBox(width: 12));
-                      }
-                      cards.add(
-                        SizedBox(
-                          width: cardWidth,
-                          child: quickAccessCards[index],
-                        ),
-                      );
-                    }
-
-                    return SizedBox(
-                      height: 142,
-                      child: useGrid
-                          ? Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              child: Row(children: cards),
-                            )
-                          : ListView(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              scrollDirection: Axis.horizontal,
-                              children: cards,
-                            ),
-                    );
-                  },
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
-
-              // Section Title: Field Status & Activities
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 22),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        s.fieldStatusTitle,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF192024),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const AdvisoryScreen()),
-                        ),
-                        child: Text(
-                          s.seeAll,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFFFF7E55),
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          Text(
+                            s.advLoading,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF6B7280),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
+                  ),
+                )
+              else if (_todayAdvisories.isEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.check_circle_outline_rounded,
+                            color: Color(0xFF2E7D32),
+                            size: 38,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            s.advEmpty,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF191D24),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              else
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final adv = _todayAdvisories[index];
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                        child: _AdvisoryCard(advisory: adv),
+                      );
+                    },
+                    childCount: _todayAdvisories.length,
+                  ),
+                ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 90)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Hero Rice Farm Banner Card
+// ─────────────────────────────────────────────────────────────────────────────
+class _HeroRiceFarmCard extends StatelessWidget {
+  final AppStrings s;
+  const _HeroRiceFarmCard({required this.s});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, animation, __) => const ScanScreen(),
+          transitionsBuilder: (_, animation, __, child) {
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+            );
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(curved),
+              child: FadeTransition(opacity: curved, child: child),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 320),
+        ),
+      ),
+      child: Container(
+        height: 205,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1B5E20).withValues(alpha: 0.22),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Real High-Resolution Rice Terraces Photography
+              Image.asset(
+                'assets/images/hero_rice_field.jpg',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF1B5E20), Color(0xFF388E3C)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                   ),
                 ),
               ),
 
-              // Activity Cards List
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 110),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    _FieldActivityCard(
-                      icon: Icons.science_outlined,
-                      iconBg: const Color(0xFFFFF0EB),
-                      iconColor: const Color(0xFFFF7E55),
-                      title: s.featFertilizer,
-                      subtitle: s.featFertilizerSub,
-                      badgeText: s.featFertilizerBadge,
-                      badgeColor: const Color(0xFFE8F5E9),
-                      badgeTextColor: const Color(0xFF2E7D32),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const CalendarScreen()),
+              // Gradient Overlay for Crystal Clear Text Readability
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.15),
+                      Colors.black.withValues(alpha: 0.72),
+                    ],
+                    stops: const [0.25, 1.0],
+                  ),
+                ),
+              ),
+
+              // Top Floating Badges
+              Positioned(
+                top: 14,
+                left: 14,
+                child: _PillBadge(
+                  text: s.onDeviceAi,
+                  icon: Icons.memory_rounded,
+                  bg: const Color(0xFF2E7D32).withValues(alpha: 0.92),
+                ),
+              ),
+              Positioned(
+                top: 14,
+                right: 14,
+                child: _PillBadge(
+                  text: s.accuracyBadge,
+                  icon: Icons.auto_awesome,
+                  bg: Colors.white.withValues(alpha: 0.22),
+                  borderColor: Colors.white.withValues(alpha: 0.45),
+                ),
+              ),
+
+              // Bottom Title and CTA Button
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 16,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            s.heroTitle,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 19,
+                              fontWeight: FontWeight.w800,
+                              height: 1.2,
+                              letterSpacing: -0.3,
+                              shadows: [
+                                Shadow(color: Colors.black45, blurRadius: 8),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            s.heroSubtitle,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.90),
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    _FieldActivityCard(
-                      icon: Icons.wb_sunny_outlined,
-                      iconBg: const Color(0xFFFFF8E1),
-                      iconColor: const Color(0xFFFFA000),
-                      title: s.featWeather,
-                      subtitle: s.featWeatherSub,
-                      badgeText: s.featWeatherBadge,
-                      badgeColor: const Color(0xFFE3F2FD),
-                      badgeTextColor: const Color(0xFF1976D2),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const WeatherScreen()),
+                    const SizedBox(width: 10),
+
+                    // Primary Scan CTA Button
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2E7D32),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF2E7D32).withValues(alpha: 0.5),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.document_scanner_rounded,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            s.featScan,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    _FieldActivityCard(
-                      icon: Icons.calendar_today_outlined,
-                      iconBg: const Color(0xFFE8F5E9),
-                      iconColor: const Color(0xFF388E3C),
-                      title: s.featCalendar,
-                      subtitle: s.featCalendarSub,
-                      badgeText: s.featCalendarBadge,
-                      badgeColor: const Color(0xFFF1F8E9),
-                      badgeTextColor: const Color(0xFF558B2F),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const CalendarScreen()),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _FieldActivityCard(
-                      icon: Icons.shield_outlined,
-                      iconBg: const Color(0xFFFFEBEE),
-                      iconColor: const Color(0xFFE53935),
-                      title: s.featAdvisory,
-                      subtitle: _loading
-                          ? s.advLoading
-                          : '${_todayAdvisories.length} ${s.featAdvisorySub}',
-                      badgeText: s.featAdvisoryBadge,
-                      badgeColor: const Color(0xFFFFF3E0),
-                      badgeTextColor: const Color(0xFFE65100),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const AdvisoryScreen()),
-                      ),
-                    ),
-                  ]),
+                  ],
                 ),
               ),
             ],
@@ -713,26 +772,23 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _FieldActivityCard extends StatelessWidget {
+// ─────────────────────────────────────────────────────────────────────────────
+// Professional Rice Farm Feature Card
+// ─────────────────────────────────────────────────────────────────────────────
+class _RiceFeatureCard extends StatelessWidget {
+  final String imagePath;
   final IconData icon;
-  final Color iconBg;
-  final Color iconColor;
   final String title;
   final String subtitle;
-  final String badgeText;
-  final Color badgeColor;
-  final Color badgeTextColor;
+  final Color accentColor;
   final VoidCallback onTap;
 
-  const _FieldActivityCard({
+  const _RiceFeatureCard({
+    required this.imagePath,
     required this.icon,
-    required this.iconBg,
-    required this.iconColor,
     required this.title,
     required this.subtitle,
-    required this.badgeText,
-    required this.badgeColor,
-    required this.badgeTextColor,
+    required this.accentColor,
     required this.onTap,
   });
 
@@ -741,169 +797,110 @@ class _FieldActivityCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-        child: Row(
-          children: [
-            // Left round thumbnail icon
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: iconBg,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Icon(icon, color: iconColor, size: 24),
-              ),
-            ),
-            const SizedBox(width: 14),
-            // Title & Subtitle
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF192024),
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Right Status Badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: badgeColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                badgeText,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: badgeTextColor,
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: Color(0xFFB0B4BA),
-              size: 20,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Paints a stylized rice paddy landscape in code (no image asset needed).
-/// Horizontal quick-access feature card (reference: food app category cards).
-class _FeatureCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String value;
-  final LinearGradient gradient;
-  final VoidCallback onTap;
-
-  const _FeatureCard({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.gradient,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(22);
-
-    return Material(
-      color: Colors.transparent,
-      elevation: 4,
-      shadowColor: gradient.colors.last.withValues(alpha: 0.28),
-      borderRadius: borderRadius,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: borderRadius,
-        splashColor: Colors.white.withValues(alpha: 0.18),
-        child: Ink(
-          decoration: BoxDecoration(
-            gradient: gradient,
-            borderRadius: borderRadius,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.24),
-                  ),
-                ),
-                child: SizedBox(
-                  width: 38,
-                  height: 38,
-                  child: Icon(icon, color: Colors.white, size: 22),
+              // Photo Header (Top Portion)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 80,
+                child: Image.asset(
+                  imagePath,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      Container(color: accentColor.withValues(alpha: 0.12)),
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    value,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      height: 1.1,
+
+              // Soft Fade to Card Body
+              Positioned(
+                top: 50,
+                left: 0,
+                right: 0,
+                height: 35,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.transparent, Colors.white],
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.92),
-                      height: 1.15,
+                ),
+              ),
+
+              // Floating Icon Badge
+              Positioned(
+                top: 48,
+                left: 12,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Icon(icon, color: accentColor, size: 17),
+                  ),
+                ),
+              ),
+
+              // Title and Subtitle at Bottom
+              Positioned(
+                left: 12,
+                right: 12,
+                bottom: 10,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF191D24),
+                        letterSpacing: -0.1,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: accentColor,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -913,157 +910,226 @@ class _FeatureCard extends StatelessWidget {
   }
 }
 
-/// Paints a stylized rice paddy landscape in code (no image asset needed).
-class _RiceFieldPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
+// ─────────────────────────────────────────────────────────────────────────────
+// Advisory Card
+// ─────────────────────────────────────────────────────────────────────────────
+class _AdvisoryCard extends StatelessWidget {
+  final Advisory advisory;
+  const _AdvisoryCard({required this.advisory});
 
-    // Sky gradient (warm sunrise tones)
-    final skyPaint = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0xFF87CEEB), Color(0xFFFDB97D)],
-        stops: [0.0, 1.0],
-      ).createShader(Rect.fromLTWH(0, 0, w, h * 0.45));
-    canvas.drawRect(Rect.fromLTWH(0, 0, w, h * 0.45), skyPaint);
-
-    // Sun glow
-    final sunGlow = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFFFFF176).withValues(alpha: 0.8),
-          const Color(0xFFFDB97D).withValues(alpha: 0.0),
-        ],
-      ).createShader(Rect.fromCircle(
-          center: Offset(w * 0.72, h * 0.18), radius: h * 0.28));
-    canvas.drawCircle(Offset(w * 0.72, h * 0.18), h * 0.28, sunGlow);
-
-    // Sun disc
-    canvas.drawCircle(
-      Offset(w * 0.72, h * 0.18),
-      h * 0.065,
-      Paint()..color = const Color(0xFFFFF176),
-    );
-
-    // Mountain silhouette
-    final mtPaint = Paint()..color = const Color(0xFF5D8A6B);
-    final mtPath = Path()
-      ..moveTo(0, h * 0.42)
-      ..lineTo(w * 0.18, h * 0.18)
-      ..lineTo(w * 0.36, h * 0.38)
-      ..lineTo(w * 0.48, h * 0.22)
-      ..lineTo(w * 0.62, h * 0.40)
-      ..lineTo(w, h * 0.30)
-      ..lineTo(w, h * 0.45)
-      ..close();
-    canvas.drawPath(mtPath, mtPaint);
-
-    // Terraced paddy fields (horizontal bands with water reflections)
-    final terraceColors = [
-      const Color(0xFF4CAF50),
-      const Color(0xFF81C784),
-      const Color(0xFFA5D6A7),
-      const Color(0xFF66BB6A),
-    ];
-    final waterColors = [
-      const Color(0xFF29B6F6).withValues(alpha: 0.5),
-      const Color(0xFF4FC3F7).withValues(alpha: 0.4),
-      const Color(0xFF81D4FA).withValues(alpha: 0.35),
-    ];
-
-    // Draw 4 terraces from bottom
-    for (int i = 0; i < 4; i++) {
-      final top = h * (0.43 + i * 0.135);
-      final bot = top + h * 0.13;
-      final terraceRect = Rect.fromLTWH(0, top, w, bot - top);
-
-      // Grass/rice layer
-      canvas.drawRect(
-        terraceRect,
-        Paint()..color = terraceColors[i % terraceColors.length],
-      );
-
-      // Water shimmer strip at top of each terrace
-      if (i < 3) {
-        canvas.drawRect(
-          Rect.fromLTWH(0, top, w, h * 0.025),
-          Paint()..color = waterColors[i % waterColors.length],
-        );
-      }
-
-      // Rice stalk rows (thin vertical lines)
-      final stalkPaint = Paint()
-        ..color = const Color(0xFF2E7D32).withValues(alpha: 0.5)
-        ..strokeWidth = 1.2;
-      for (double x = 8; x < w; x += 14) {
-        final jitter = math.sin(x * 0.3 + i) * 3;
-        canvas.drawLine(
-          Offset(x + jitter, top + h * 0.03),
-          Offset(x + jitter, top + h * 0.11),
-          stalkPaint,
-        );
-        // Rice grain head tilt
-        canvas.drawLine(
-          Offset(x + jitter, top + h * 0.03),
-          Offset(x + jitter + 5, top + h * 0.01),
-          stalkPaint,
-        );
-      }
+  Color _severityColor() {
+    switch (advisory.severity.toLowerCase()) {
+      case 'critical':
+      case 'high':
+        return const Color(0xFFB71C1C);
+      case 'warning':
+      case 'medium':
+        return const Color(0xFFE65100);
+      default:
+        return const Color(0xFF2E7D32);
     }
-
-    // Foreground edge shadow
-    final fgPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Colors.transparent,
-          const Color(0xFF1B4332).withValues(alpha: 0.3),
-        ],
-      ).createShader(Rect.fromLTWH(0, h * 0.75, w, h * 0.25));
-    canvas.drawRect(Rect.fromLTWH(0, h * 0.75, w, h * 0.25), fgPaint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  Widget build(BuildContext context) {
+    final color = _severityColor();
+    final fmt = DateFormat('MMM d');
+    final title = '${advisory.stage} · ${fmt.format(advisory.date)}';
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(Icons.warning_amber_rounded, color: color, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF191D24),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        advisory.severity.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  advisory.message,
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    color: Color(0xFF5A6270),
+                    height: 1.35,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _CircleIconButton extends StatelessWidget {
+// ─────────────────────────────────────────────────────────────────────────────
+// Pill Badge
+// ─────────────────────────────────────────────────────────────────────────────
+class _PillBadge extends StatelessWidget {
+  final String text;
   final IconData icon;
-  final Color iconColor;
-  final VoidCallback onTap;
+  final Color bg;
+  final Color? borderColor;
 
-  const _CircleIconButton({
+  const _PillBadge({
+    required this.text,
     required this.icon,
-    required this.iconColor,
-    required this.onTap,
+    required this.bg,
+    this.borderColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(20),
+        border: borderColor != null
+            ? Border.all(color: borderColor!, width: 1)
+            : null,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: Colors.white),
+          const SizedBox(width: 5),
+          Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
             ),
-          ],
-        ),
-        child: Center(
-          child: Icon(icon, color: iconColor, size: 20),
-        ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Circle Action Button
+// ─────────────────────────────────────────────────────────────────────────────
+class _CircleActionBtn extends StatelessWidget {
+  final IconData icon;
+  final String? badge;
+  final VoidCallback onTap;
+
+  const _CircleActionBtn({
+    required this.icon,
+    required this.onTap,
+    this.badge,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Icon(icon, size: 18, color: const Color(0xFF374151)),
+            ),
+          ),
+          if (badge != null)
+            Positioned(
+              top: -2,
+              right: -2,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFB71C1C),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  badge!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 8.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

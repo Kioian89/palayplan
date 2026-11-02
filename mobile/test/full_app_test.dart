@@ -72,40 +72,45 @@ void main() {
       // Helper: scroll until the text widget is visible, then tap it.
       Future<void> scrollAndTap(String text) async {
         await tester.scrollUntilVisible(
-          find.text(text),
+          find.text(text).first,
           200.0,
           scrollable: find.byType(Scrollable).first,
           maxScrolls: 100,
         );
         await tester.ensureVisible(find.text(text).first);
-        await tester.pumpAndSettle();
+        await tester.pump(const Duration(milliseconds: 300));
         await tester.tap(find.text(text).first);
-        await tester.pumpAndSettle();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
       }
 
       // Scan Leaf Disease navigation (in hero spotlight card near top)
       await scrollAndTap('Scan Rice Leaf Disease');
       expect(find.byType(ScanScreen), findsOneWidget);
       await tester.pageBack();
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
 
       // Weather forecast navigation
       await scrollAndTap('7-Day Weather Forecast');
       expect(find.byType(WeatherScreen), findsOneWidget);
       await tester.pageBack();
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
 
       // Cropping Calendar navigation
       await scrollAndTap('Cropping Calendar');
       expect(find.byType(CalendarScreen), findsOneWidget);
       await tester.pageBack();
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
 
       // Advisories navigation
       await scrollAndTap('All Advisories');
       expect(find.byType(AdvisoryScreen), findsOneWidget);
       await tester.pageBack();
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
     });
 
     testWidgets('ScanScreen renders capture buttons and leaf guidance banner', (WidgetTester tester) async {
