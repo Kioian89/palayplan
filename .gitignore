@@ -2,6 +2,10 @@
 **/.env
 **/.env.*
 !**/.env.example
+backend/firebase-service-account.json
+mobile/firebase.env.json
+mobile/android/app/google-services.json
+mobile/ios/Runner/GoogleService-Info.plist
 
 # Flutter / Dart
 **/build/
@@ -39,3 +43,8 @@
 Thumbs.db
 *.log
 
+# SQLite database
+backend/palayplan.db
+
+# Scratch scripts
+scripts/

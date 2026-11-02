@@ -1,30 +1,86 @@
 import 'dart:convert';
+import 'dart:async';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/weather_model.dart';
+import 'api_cache.dart';
+
+class BackendAuthException implements Exception {
+  const BackendAuthException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
 
 /// Central place for all backend calls. Swap [baseUrl] per environment
 /// (local emulator, staging, production) via --dart-define or a config file.
 class ApiService {
+  ApiService({http.Client? client}) : _client = client ?? http.Client();
+
+  static const _requestTimeout = Duration(seconds: 12);
+
+  final http.Client _client;
+  bool _lastResponseWasCached = false;
+  DateTime? _lastResponseAt;
+
+  bool get lastResponseWasCached => _lastResponseWasCached;
+  DateTime? get lastResponseAt => _lastResponseAt;
+
+  void close() => _client.close();
+
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: 'http://10.0.5.244:8000', // Android emulator -> localhost
   );
+
+  Future<Map<String, dynamic>> verifyFirebaseToken(String idToken) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/auth/me'),
+      headers: {'Authorization': 'Bearer $idToken'},
+    );
+    if (response.statusCode != 200) {
+      throw BackendAuthException(
+        'The PalayPlan server could not verify this Firebase account '
+        '(HTTP ${response.statusCode}).',
+      );
+    }
+    return Map<String, dynamic>.from(jsonDecode(response.body));
+  }
 
   Future<WeatherForecast> getForecast({
     required String municipality,
     required double lat,
     required double lon,
   }) async {
-    final uri = Uri.parse('$baseUrl/weather/forecast').replace(queryParameters: {
+    final uri =
+        Uri.parse('$baseUrl/weather/forecast').replace(queryParameters: {
       'municipality': municipality,
       'lat': lat.toString(),
       'lon': lon.toString(),
     });
-    final response = await http.get(uri);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to load forecast: ${response.body}');
+    final cacheKey = _cacheKey('forecast', [municipality, lat, lon]);
+    try {
+      final response = await _client.get(uri).timeout(_requestTimeout);
+      if (response.statusCode != 200) {
+        throw _ApiRequestException(
+          'Failed to load forecast: HTTP ${response.statusCode}',
+        );
+      }
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final forecast = WeatherForecast.fromJson(data);
+      _markNetworkResponse();
+      await _saveCache(cacheKey, data);
+      return forecast;
+    } catch (error) {
+      if (!_isRecoverable(error)) rethrow;
+      final cached = await ApiCache.read(cacheKey);
+      if (cached == null || cached.data is! Map<String, dynamic>) rethrow;
+      _markCachedResponse(cached.savedAt);
+      return WeatherForecast.fromJson(cached.data as Map<String, dynamic>);
     }
-    return WeatherForecast.fromJson(jsonDecode(response.body));
   }
 
   Future<List<Advisory>> getAdvisories({
@@ -41,12 +97,36 @@ class ApiService {
       'start_date': startDate.toIso8601String().split('T').first,
       'days_to_maturity': daysToMaturity.toString(),
     });
-    final response = await http.get(uri);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to load advisories: ${response.body}');
+    final cacheKey = _cacheKey('advisories', [
+      municipality,
+      lat,
+      lon,
+      startDate.toIso8601String().split('T').first,
+      daysToMaturity,
+    ]);
+    try {
+      final response = await _client.get(uri).timeout(_requestTimeout);
+      if (response.statusCode != 200) {
+        throw _ApiRequestException(
+          'Failed to load advisories: HTTP ${response.statusCode}',
+        );
+      }
+      final data = jsonDecode(response.body) as List<dynamic>;
+      final advisories = data
+          .map((item) => Advisory.fromJson(item as Map<String, dynamic>))
+          .toList();
+      _markNetworkResponse();
+      await _saveCache(cacheKey, data);
+      return advisories;
+    } catch (error) {
+      if (!_isRecoverable(error)) rethrow;
+      final cached = await ApiCache.read(cacheKey);
+      if (cached == null || cached.data is! List<dynamic>) rethrow;
+      _markCachedResponse(cached.savedAt);
+      return (cached.data as List<dynamic>)
+          .map((item) => Advisory.fromJson(item as Map<String, dynamic>))
+          .toList();
     }
-    final List data = jsonDecode(response.body);
-    return data.map((e) => Advisory.fromJson(e)).toList();
   }
 
   Future<Map<String, dynamic>> predictYield({
@@ -63,21 +143,60 @@ class ApiService {
       'lat': lat.toString(),
       'lon': lon.toString(),
     });
-    final response = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'seed_variety': seedVariety,
-        'days_to_maturity': daysToMaturity,
-        'field_size_hectares': fieldSizeHectares,
-        'start_date': startDate.toIso8601String().split('T').first,
-        'municipality': municipality,
-        'soil_type': soilType,
-      }),
-    );
+    final response = await _client
+        .post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'seed_variety': seedVariety,
+            'days_to_maturity': daysToMaturity,
+            'field_size_hectares': fieldSizeHectares,
+            'start_date': startDate.toIso8601String().split('T').first,
+            'municipality': municipality,
+            'soil_type': soilType,
+          }),
+        )
+        .timeout(_requestTimeout);
     if (response.statusCode != 200) {
       throw Exception('Prediction failed: ${response.body}');
     }
     return jsonDecode(response.body);
   }
+
+  String _cacheKey(String category, List<Object> dimensions) =>
+      '${category}_${Uri.encodeComponent(dimensions.join('|'))}';
+
+  bool _isRecoverable(Object error) =>
+      error is http.ClientException ||
+      error is SocketException ||
+      error is TimeoutException ||
+      error is FormatException ||
+      error is _ApiRequestException;
+
+  void _markNetworkResponse() {
+    _lastResponseWasCached = false;
+    _lastResponseAt = DateTime.now();
+  }
+
+  void _markCachedResponse(DateTime savedAt) {
+    _lastResponseWasCached = true;
+    _lastResponseAt = savedAt;
+  }
+
+  Future<void> _saveCache(String key, Object data) async {
+    try {
+      await ApiCache.write(key, data);
+    } catch (error) {
+      debugPrint('Could not save offline API data: $error');
+    }
+  }
+}
+
+class _ApiRequestException implements Exception {
+  const _ApiRequestException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
 }

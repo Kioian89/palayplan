@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../widgets/risk_status_card.dart';
 import '../providers/field_provider.dart';
 import '../l10n/app_strings.dart';
+import '../widgets/offline_data_notice.dart';
 
 class AdvisoryScreen extends StatefulWidget {
   const AdvisoryScreen({super.key});
@@ -17,6 +18,9 @@ class _AdvisoryScreenState extends State<AdvisoryScreen> {
   final ApiService _api = ApiService();
   List<Advisory> _advisories = [];
   bool _loading = true;
+  bool _usingCachedData = false;
+  DateTime? _dataSavedAt;
+  bool _unavailable = false;
 
   @override
   void initState() {
@@ -37,12 +41,27 @@ class _AdvisoryScreenState extends State<AdvisoryScreen> {
       if (mounted) {
         setState(() {
           _advisories = data;
+          _usingCachedData = _api.lastResponseWasCached;
+          _dataSavedAt = _api.lastResponseAt;
           _loading = false;
+          _unavailable = false;
         });
       }
     } catch (_) {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _unavailable = _advisories.isEmpty;
+          if (_advisories.isNotEmpty) _usingCachedData = true;
+        });
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _api.close();
+    super.dispose();
   }
 
   @override
@@ -65,7 +84,8 @@ class _AdvisoryScreenState extends State<AdvisoryScreen> {
             Padding(
               padding: const EdgeInsets.only(right: 16),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: cs.primaryContainer,
                   borderRadius: BorderRadius.circular(20),
@@ -84,9 +104,41 @@ class _AdvisoryScreenState extends State<AdvisoryScreen> {
       ),
       body: _loading
           ? _buildLoading(cs, s)
-          : _advisories.isEmpty
-              ? _buildEmptyState(cs)
-              : _buildList(fmt, cs),
+          : _unavailable && _advisories.isEmpty
+              ? _buildUnavailable(cs, s)
+              : _advisories.isEmpty
+                  ? _buildEmptyState(cs)
+                  : _buildList(fmt, cs),
+    );
+  }
+
+  Widget _buildUnavailable(ColorScheme cs, AppStrings s) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud_off_outlined,
+                size: 48, color: cs.onSurfaceVariant),
+            const SizedBox(height: 16),
+            Text(
+              s.offlineNoCachedData,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 20),
+            OutlinedButton.icon(
+              onPressed: () {
+                setState(() => _loading = true);
+                _load();
+              },
+              icon: const Icon(Icons.refresh),
+              label: Text(s.offlineRetry),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -113,6 +165,8 @@ class _AdvisoryScreenState extends State<AdvisoryScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (_usingCachedData && _dataSavedAt != null)
+              OfflineDataNotice(savedAt: _dataSavedAt!),
             Container(
               width: 80,
               height: 80,
@@ -150,8 +204,10 @@ class _AdvisoryScreenState extends State<AdvisoryScreen> {
               icon: const Icon(Icons.refresh),
               label: const Text('Refresh'),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
               ),
               onPressed: () {
                 setState(() => _loading = true);
@@ -167,6 +223,10 @@ class _AdvisoryScreenState extends State<AdvisoryScreen> {
   Widget _buildList(DateFormat fmt, ColorScheme cs) {
     return CustomScrollView(
       slivers: [
+        if (_usingCachedData && _dataSavedAt != null)
+          SliverToBoxAdapter(
+            child: OfflineDataNotice(savedAt: _dataSavedAt!),
+          ),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -185,17 +245,14 @@ class _AdvisoryScreenState extends State<AdvisoryScreen> {
           delegate: SliverChildBuilderDelegate(
             (context, i) {
               final a = _advisories[i];
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                child: RiskStatusCard(
-                  title: '${a.stage} · ${fmt.format(a.date)}',
-                  message: a.message,
-                  riskLevel: a.severity == 'critical'
-                      ? 'high'
-                      : a.severity == 'warning'
-                          ? 'medium'
-                          : 'low',
-                ),
+              return RiskStatusCard(
+                title: '${a.stage} · ${fmt.format(a.date)}',
+                message: a.message,
+                riskLevel: a.severity == 'critical'
+                    ? 'high'
+                    : a.severity == 'warning'
+                        ? 'medium'
+                        : 'low',
               );
             },
             childCount: _advisories.length,

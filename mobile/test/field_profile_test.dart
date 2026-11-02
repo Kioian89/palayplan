@@ -16,7 +16,8 @@ void main() {
   });
 
   group('FieldProfile Model & Provider Logic', () {
-    test('Default FieldProfile calculates correct maturity and growth stage', () {
+    test('Default FieldProfile calculates correct maturity and growth stage',
+        () {
       final profile = FieldProfile.defaultProfile();
 
       expect(profile.municipality, 'Ubay');
@@ -28,7 +29,8 @@ void main() {
       expect((profile.progressPercent * 100).round(), 38);
     });
 
-    test('FieldProvider updates and persists profile in SharedPreferences', () async {
+    test('FieldProvider updates and persists profile in SharedPreferences',
+        () async {
       final provider = FieldProvider();
 
       final updated = FieldProfile(
@@ -37,6 +39,7 @@ void main() {
         province: 'Nueva Ecija',
         latitude: 15.7167,
         longitude: 120.9000,
+        hasCustomCoordinates: true,
         plantingDate: DateTime.now().subtract(const Duration(days: 20)),
         varietyName: 'NSIC Rc 160 (Tubigan 14)',
         daysToMaturity: 107,
@@ -48,13 +51,17 @@ void main() {
       expect(provider.field.municipality, 'Science City of Muñoz');
       expect(provider.field.daysToMaturity, 107);
       expect(provider.field.fieldAreaHa, 2.5);
+      expect(provider.field.hasCustomCoordinates, isTrue);
 
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString('farmer_field_profile'), isNotNull);
       expect(prefs.getString('farmer_field_profile'), contains('Nueva Ecija'));
+      expect(prefs.getString('farmer_field_profile'),
+          contains('"hasCustomCoordinates":true'));
     });
 
-    testWidgets('Tapping location on HomeScreen opens EditFieldSheet and saves profile',
+    testWidgets(
+        'Tapping location on HomeScreen opens EditFieldSheet and saves profile',
         (WidgetTester tester) async {
       final fieldProvider = FieldProvider();
       final langProvider = LanguageProvider();
@@ -83,6 +90,7 @@ void main() {
       expect(find.byType(EditFieldSheet), findsOneWidget);
       expect(find.text('My Field Profile'), findsOneWidget);
       expect(find.text('Save Field Profile'), findsOneWidget);
+      expect(find.text('Choose exact location on map'), findsOneWidget);
 
       // Ensure save button is visible and tap Save
       await tester.ensureVisible(find.text('Save Field Profile'));

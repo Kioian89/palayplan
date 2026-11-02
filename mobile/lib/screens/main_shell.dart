@@ -4,10 +4,16 @@ import 'weather_screen.dart';
 import 'calendar_screen.dart';
 import 'advisory_screen.dart';
 import 'scan_screen.dart';
+import '../services/firebase_auth_service.dart';
 
 class MainShell extends StatefulWidget {
   final int initialIndex;
-  const MainShell({super.key, this.initialIndex = 0});
+  final FirebaseAuthService? authService;
+  const MainShell({
+    super.key,
+    this.initialIndex = 0,
+    this.authService,
+  });
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -22,12 +28,12 @@ class _MainShellState extends State<MainShell>
   late Animation<double> _fadeAnim;
 
   // The ordered screens for the 4 real tabs (skipping center scanner slot)
-  static const List<Widget> _screens = [
-    HomeScreen(),
-    WeatherScreen(),
-    CalendarScreen(),
-    AdvisoryScreen(),
-  ];
+  List<Widget> get _screens => [
+        HomeScreen(authService: widget.authService),
+        const WeatherScreen(),
+        const CalendarScreen(),
+        const AdvisoryScreen(),
+      ];
 
   // Map tab-bar indices (0,1,3,4) to screen list indices (0,1,2,3)
   static int _screenIndex(int tabIndex) {
@@ -153,7 +159,8 @@ class _MainShellState extends State<MainShell>
                         borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFFF6E40).withValues(alpha: 0.4),
+                            color:
+                                const Color(0xFFFF6E40).withValues(alpha: 0.4),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),

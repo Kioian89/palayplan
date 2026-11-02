@@ -23,12 +23,16 @@ class DiseaseClassifier {
           .where((s) => s.isNotEmpty)
           .toList();
 
-      _interpreter = await Interpreter.fromAsset('assets/models/rice_model.tflite');
+      _interpreter =
+          await Interpreter.fromAsset('assets/models/rice_model.tflite');
       _isInitialized = true;
-      debugPrint('DiseaseClassifier (Native) initialized with ${_labels.length} classes: $_labels');
+      debugPrint(
+          'DiseaseClassifier (Native) initialized with ${_labels.length} classes: $_labels');
     } catch (e) {
-      debugPrint('Native TFLite engine initialized in fallback mode: $e');
-      _isInitialized = true;
+      _interpreter?.close();
+      _interpreter = null;
+      _labels = [];
+      throw StateError('Could not load the on-device disease model: $e');
     }
   }
 
@@ -38,10 +42,8 @@ class DiseaseClassifier {
     }
 
     if (_interpreter == null) {
-      // Desktop / test runner simulator fallback
-      return const DiseasePrediction(
-        label: 'bacterial_leaf_blight',
-        confidence: 0.88,
+      throw StateError(
+        'Disease scanning is unavailable because the on-device model did not load.',
       );
     }
 

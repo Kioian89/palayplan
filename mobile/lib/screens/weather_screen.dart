@@ -4,6 +4,7 @@ import '../models/weather_model.dart';
 import '../services/api_service.dart';
 import '../providers/field_provider.dart';
 import '../widgets/edit_field_sheet.dart';
+import '../widgets/offline_data_notice.dart';
 import '../l10n/app_strings.dart';
 
 class WeatherScreen extends StatefulWidget {
@@ -17,6 +18,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
   final ApiService _api = ApiService();
   WeatherForecast? _forecast;
   String? _error;
+  bool _usingCachedData = false;
+  DateTime? _dataSavedAt;
 
   @override
   void initState() {
@@ -32,10 +35,32 @@ class _WeatherScreenState extends State<WeatherScreen> {
         lat: field.latitude,
         lon: field.longitude,
       );
-      if (mounted) setState(() => _forecast = forecast);
+      if (mounted) {
+        setState(() {
+          _forecast = forecast;
+          _usingCachedData = _api.lastResponseWasCached;
+          _dataSavedAt = _api.lastResponseAt;
+          _error = null;
+        });
+      }
     } catch (e) {
-      if (mounted) setState(() => _error = e.toString());
+      if (mounted) {
+        setState(() {
+          if (_forecast == null) {
+            _error = e.toString();
+          } else {
+            _usingCachedData = true;
+            _error = null;
+          }
+        });
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _api.close();
+    super.dispose();
   }
 
   @override
@@ -61,11 +86,18 @@ class _WeatherScreenState extends State<WeatherScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.cloud_off_rounded, size: 48, color: Colors.grey),
+                    const Icon(Icons.cloud_off_rounded,
+                        size: 48, color: Colors.grey),
                     const SizedBox(height: 12),
-                    Text('Error: $_error', textAlign: TextAlign.center),
+                    Text(
+                      s.offlineNoCachedData,
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 16),
-                    ElevatedButton(onPressed: _load, child: const Text('Retry')),
+                    ElevatedButton(
+                      onPressed: _load,
+                      child: Text(s.offlineRetry),
+                    ),
                   ],
                 ),
               ),
@@ -75,15 +107,19 @@ class _WeatherScreenState extends State<WeatherScreen> {
               : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
                     children: [
+                      if (_usingCachedData && _dataSavedAt != null)
+                        OfflineDataNotice(savedAt: _dataSavedAt!),
                       // Today Hero Banner
                       if (_forecast!.dailyForecast.isNotEmpty)
                         _TodayWeatherHero(day: _forecast!.dailyForecast.first),
 
                       const SizedBox(height: 18),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 4),
                         child: Text(
                           'Upcoming 7 Days',
                           style: theme.textTheme.titleMedium?.copyWith(
@@ -95,7 +131,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
                       const SizedBox(height: 6),
 
                       // Daily Forecast Cards
-                      ..._forecast!.dailyForecast.map((day) => _DailyWeatherCard(day: day)),
+                      ..._forecast!.dailyForecast
+                          .map((day) => _DailyWeatherCard(day: day)),
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -126,7 +163,8 @@ class _TodayWeatherHero extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: (isRainy ? const Color(0xFF263238) : const Color(0xFF00695C)).withValues(alpha: 0.25),
+            color: (isRainy ? const Color(0xFF263238) : const Color(0xFF00695C))
+                .withValues(alpha: 0.25),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -139,7 +177,8 @@ class _TodayWeatherHero extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
@@ -156,7 +195,8 @@ class _TodayWeatherHero extends StatelessWidget {
               ),
               Icon(
                 isRainy ? Icons.water_drop_rounded : Icons.wb_sunny_rounded,
-                color: isRainy ? const Color(0xFF81D4FA) : const Color(0xFFFFD54F),
+                color:
+                    isRainy ? const Color(0xFF81D4FA) : const Color(0xFFFFD54F),
                 size: 32,
               ),
             ],
@@ -186,14 +226,16 @@ class _TodayWeatherHero extends StatelessWidget {
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.water_drop, size: 16, color: Color(0xFF81D4FA)),
+                    const Icon(Icons.water_drop,
+                        size: 16, color: Color(0xFF81D4FA)),
                     const SizedBox(width: 4),
                     Text(
                       '${day.rainProbabilityPct.round()}% Rain',
@@ -214,9 +256,18 @@ class _TodayWeatherHero extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _HeroStat(label: 'Humidity', value: '${day.humidityPct.round()}%', icon: Icons.waves_rounded),
-              _HeroStat(label: 'Wind', value: '${day.windSpeedKph.round()} kph', icon: Icons.air_rounded),
-              _HeroStat(label: 'Field Risk', value: day.riskLevel.toUpperCase(), icon: Icons.shield_outlined),
+              _HeroStat(
+                  label: 'Humidity',
+                  value: '${day.humidityPct.round()}%',
+                  icon: Icons.waves_rounded),
+              _HeroStat(
+                  label: 'Wind',
+                  value: '${day.windSpeedKph.round()} kph',
+                  icon: Icons.air_rounded),
+              _HeroStat(
+                  label: 'Field Risk',
+                  value: day.riskLevel.toUpperCase(),
+                  icon: Icons.shield_outlined),
             ],
           ),
         ],
@@ -230,7 +281,8 @@ class _HeroStat extends StatelessWidget {
   final String value;
   final IconData icon;
 
-  const _HeroStat({required this.label, required this.value, required this.icon});
+  const _HeroStat(
+      {required this.label, required this.value, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -241,11 +293,16 @@ class _HeroStat extends StatelessWidget {
           children: [
             Icon(icon, size: 14, color: Colors.white70),
             const SizedBox(width: 4),
-            Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+            Text(label,
+                style: const TextStyle(color: Colors.white70, fontSize: 12)),
           ],
         ),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+        Text(value,
+            style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14)),
       ],
     );
   }
@@ -268,7 +325,7 @@ class _DailyWeatherCard extends StatelessWidget {
             : const Color(0xFF2E7D32);
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 5),
+      margin: const EdgeInsets.symmetric(vertical: 6),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -281,7 +338,8 @@ class _DailyWeatherCard extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: (isRainy ? Colors.blue : Colors.amber).withValues(alpha: 0.12),
+              color: (isRainy ? Colors.blue : Colors.amber)
+                  .withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(

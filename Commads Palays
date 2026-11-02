@@ -1,6 +1,0 @@
-cd /home/dian/Downloads/Mobile_Application/palayplan_backend
-source .venv/bin/activate
-python app.py
-
-cd /home/dian/Downloads/Mobile_Application/palayplan_flutter_app/palayplan_app
-flutter run -d chrome

@@ -6,6 +6,7 @@ import '../services/api_service.dart';
 import '../widgets/crop_arc_gauge.dart';
 import '../widgets/language_picker_sheet.dart';
 import '../widgets/edit_field_sheet.dart';
+import '../widgets/offline_data_notice.dart';
 import '../providers/language_provider.dart';
 import '../providers/field_provider.dart';
 import '../l10n/app_strings.dart';
@@ -13,9 +14,13 @@ import 'weather_screen.dart';
 import 'calendar_screen.dart';
 import 'advisory_screen.dart';
 import 'scan_screen.dart';
+import 'settings_screen.dart';
+import '../services/firebase_auth_service.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.authService});
+
+  final FirebaseAuthService? authService;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -25,6 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final ApiService _api = ApiService();
   List<Advisory> _todayAdvisories = [];
   bool _loading = true;
+  bool _usingCachedData = false;
+  DateTime? _dataSavedAt;
   int _selectedFilterIndex = 0;
 
   @override
@@ -46,6 +53,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         setState(() {
           _todayAdvisories = advisories.take(3).toList();
+          _usingCachedData = _api.lastResponseWasCached;
+          _dataSavedAt = _api.lastResponseAt;
           _loading = false;
         });
       }
@@ -55,16 +64,85 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void dispose() {
+    _api.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final todayStr = DateFormat('d MMM').format(DateTime.now());
     final s = AppStrings.of(context);
     final field = FieldProvider.fieldOf(context);
-    final filters = [s.filterAll, s.filterVeg, s.filterWeather, s.filterAdvisory];
+    final filters = [
+      s.filterAll,
+      s.filterVeg,
+      s.filterWeather,
+      s.filterAdvisory
+    ];
     final langShort = s.lang == AppLanguage.english
         ? 'EN'
         : s.lang == AppLanguage.filipino
             ? 'FIL'
             : 'CEB';
+    final quickAccessCards = [
+      _FeatureCard(
+        icon: Icons.wb_cloudy_rounded,
+        title: s.navWeather,
+        value: s.featWeatherBadge,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4FC3F7), Color(0xFF0288D1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const WeatherScreen()),
+        ),
+      ),
+      _FeatureCard(
+        icon: Icons.calendar_month_rounded,
+        title: s.navCalendar,
+        value: s.featCalendarBadge,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF81C784), Color(0xFF388E3C)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CalendarScreen()),
+        ),
+      ),
+      _FeatureCard(
+        icon: Icons.science_rounded,
+        title: s.featFertilizer,
+        value: s.featFertilizerBadge,
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFB74D), Color(0xFFE65100)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CalendarScreen()),
+        ),
+      ),
+      _FeatureCard(
+        icon: Icons.shield_rounded,
+        title: s.navAdvisory,
+        value: _loading ? '…' : '${_todayAdvisories.length}',
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEF9A9A), Color(0xFFB71C1C)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AdvisoryScreen()),
+        ),
+      ),
+    ];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F6F2),
@@ -78,6 +156,10 @@ class _HomeScreenState extends State<HomeScreen> {
               parent: BouncingScrollPhysics(),
             ),
             slivers: [
+              if (_usingCachedData && _dataSavedAt != null)
+                SliverToBoxAdapter(
+                  child: OfflineDataNotice(savedAt: _dataSavedAt!),
+                ),
               // Top Bar
               SliverToBoxAdapter(
                 child: Padding(
@@ -105,7 +187,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.location_on, size: 12, color: Color(0xFFFF7E55)),
+                                const Icon(Icons.location_on,
+                                    size: 12, color: Color(0xFFFF7E55)),
                                 const SizedBox(width: 2),
                                 Text(
                                   field.locationDisplay,
@@ -116,7 +199,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 2),
-                                const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: Color(0xFFFF7E55)),
+                                const Icon(Icons.keyboard_arrow_down_rounded,
+                                    size: 14, color: Color(0xFFFF7E55)),
                               ],
                             ),
                           ],
@@ -129,11 +213,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           GestureDetector(
                             onTap: () => LanguagePickerSheet.show(context),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFFE5E7EB)),
+                                border:
+                                    Border.all(color: const Color(0xFFE5E7EB)),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withValues(alpha: 0.04),
@@ -145,7 +231,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.language_rounded, size: 15, color: Color(0xFFFF7E55)),
+                                  const Icon(Icons.language_rounded,
+                                      size: 15, color: Color(0xFFFF7E55)),
                                   const SizedBox(width: 4),
                                   Text(
                                     langShort,
@@ -166,7 +253,28 @@ class _HomeScreenState extends State<HomeScreen> {
                             iconColor: const Color(0xFF1B2128),
                             onTap: () => Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const AdvisoryScreen()),
+                              MaterialPageRoute(
+                                  builder: (_) => const AdvisoryScreen()),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            tooltip: AppStrings.of(context).settingsTitle,
+                            constraints: const BoxConstraints.tightFor(
+                              width: 48,
+                              height: 48,
+                            ),
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute<void>(
+                                builder: (_) => SettingsScreen(
+                                  authService: widget.authService,
+                                ),
+                              ),
+                            ),
+                            icon: const Icon(
+                              Icons.settings_outlined,
+                              color: Color(0xFF1B2128),
                             ),
                           ),
                         ],
@@ -201,11 +309,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemBuilder: (context, index) {
                       final isSelected = _selectedFilterIndex == index;
                       return GestureDetector(
-                        onTap: () => setState(() => _selectedFilterIndex = index),
+                        onTap: () =>
+                            setState(() => _selectedFilterIndex = index),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 18, vertical: 8),
                           decoration: BoxDecoration(
-                            color: isSelected ? const Color(0xFF191D24) : Colors.white,
+                            color: isSelected
+                                ? const Color(0xFF191D24)
+                                : Colors.white,
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               if (!isSelected)
@@ -222,7 +334,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: isSelected ? Colors.white : const Color(0xFF4A505A),
+                                color: isSelected
+                                    ? Colors.white
+                                    : const Color(0xFF4A505A),
                               ),
                             ),
                           ),
@@ -254,7 +368,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               begin: const Offset(0, 1),
                               end: Offset.zero,
                             ).animate(curved),
-                            child: FadeTransition(opacity: curved, child: child),
+                            child:
+                                FadeTransition(opacity: curved, child: child),
                           );
                         },
                         transitionDuration: const Duration(milliseconds: 320),
@@ -403,8 +518,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                       borderRadius: BorderRadius.circular(20),
                                       boxShadow: [
                                         BoxShadow(
-                                          color:
-                                              Colors.black.withValues(alpha: 0.2),
+                                          color: Colors.black
+                                              .withValues(alpha: 0.2),
                                           blurRadius: 10,
                                           offset: const Offset(0, 4),
                                         ),
@@ -414,8 +529,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         const Icon(Icons.camera_alt_rounded,
-                                            size: 16,
-                                            color: Color(0xFFFF7E55)),
+                                            size: 16, color: Color(0xFFFF7E55)),
                                         const SizedBox(width: 6),
                                         Text(
                                           s.featScan,
@@ -441,73 +555,43 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Horizontal Quick-Access Feature Cards (reference design style)
               SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 135,
-                  child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      _FeatureCard(
-                        emoji: '🌤️',
-                        title: s.navWeather,
-                        value: s.featWeatherBadge,
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF4FC3F7), Color(0xFF0288D1)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final useGrid = constraints.maxWidth >= 640;
+                    final cardWidth = useGrid
+                        ? (constraints.maxWidth - 76) / quickAccessCards.length
+                        : 152.0;
+                    final cards = <Widget>[];
+                    for (var index = 0;
+                        index < quickAccessCards.length;
+                        index++) {
+                      if (index > 0) {
+                        cards.add(const SizedBox(width: 12));
+                      }
+                      cards.add(
+                        SizedBox(
+                          width: cardWidth,
+                          child: quickAccessCards[index],
                         ),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const WeatherScreen()),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      _FeatureCard(
-                        emoji: '📅',
-                        title: s.navCalendar,
-                        value: s.featCalendarBadge,
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF81C784), Color(0xFF388E3C)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const CalendarScreen()),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      _FeatureCard(
-                        emoji: '🧪',
-                        title: s.featFertilizer,
-                        value: s.featFertilizerBadge,
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFFB74D), Color(0xFFE65100)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const CalendarScreen()),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      _FeatureCard(
-                        emoji: '🛡️',
-                        title: s.navAdvisory,
-                        value: _loading ? '…' : '${_todayAdvisories.length}',
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFEF9A9A), Color(0xFFB71C1C)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const AdvisoryScreen()),
-                        ),
-                      ),
-                    ],
-                  ),
+                      );
+                    }
+
+                    return SizedBox(
+                      height: 142,
+                      child: useGrid
+                          ? Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: Row(children: cards),
+                            )
+                          : ListView(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              scrollDirection: Axis.horizontal,
+                              children: cards,
+                            ),
+                    );
+                  },
                 ),
               ),
 
@@ -531,7 +615,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       TextButton(
                         onPressed: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const AdvisoryScreen()),
+                          MaterialPageRoute(
+                              builder: (_) => const AdvisoryScreen()),
                         ),
                         child: Text(
                           s.seeAll,
@@ -563,7 +648,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       badgeTextColor: const Color(0xFF2E7D32),
                       onTap: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const CalendarScreen()),
+                        MaterialPageRoute(
+                            builder: (_) => const CalendarScreen()),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -578,7 +664,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       badgeTextColor: const Color(0xFF1976D2),
                       onTap: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const WeatherScreen()),
+                        MaterialPageRoute(
+                            builder: (_) => const WeatherScreen()),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -593,7 +680,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       badgeTextColor: const Color(0xFF558B2F),
                       onTap: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const CalendarScreen()),
+                        MaterialPageRoute(
+                            builder: (_) => const CalendarScreen()),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -610,7 +698,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       badgeTextColor: const Color(0xFFE65100),
                       onTap: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const AdvisoryScreen()),
+                        MaterialPageRoute(
+                            builder: (_) => const AdvisoryScreen()),
                       ),
                     ),
                   ]),
@@ -736,14 +825,14 @@ class _FieldActivityCard extends StatelessWidget {
 /// Paints a stylized rice paddy landscape in code (no image asset needed).
 /// Horizontal quick-access feature card (reference: food app category cards).
 class _FeatureCard extends StatelessWidget {
-  final String emoji;
+  final IconData icon;
   final String title;
   final String value;
   final LinearGradient gradient;
   final VoidCallback onTap;
 
   const _FeatureCard({
-    required this.emoji,
+    required this.icon,
     required this.title,
     required this.value,
     required this.gradient,
@@ -752,57 +841,72 @@ class _FeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 104,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: gradient,
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(
-              color: gradient.colors.last.withValues(alpha: 0.28),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 24)),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    height: 1.1,
+    final borderRadius = BorderRadius.circular(22);
+
+    return Material(
+      color: Colors.transparent,
+      elevation: 4,
+      shadowColor: gradient.colors.last.withValues(alpha: 0.28),
+      borderRadius: borderRadius,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: borderRadius,
+        splashColor: Colors.white.withValues(alpha: 0.18),
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: borderRadius,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.24),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withValues(alpha: 0.88),
-                    height: 1.1,
+                child: SizedBox(
+                  width: 38,
+                  height: 38,
+                  child: Icon(icon, color: Colors.white, size: 22),
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      height: 1.1,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(height: 3),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.92),
+                      height: 1.15,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

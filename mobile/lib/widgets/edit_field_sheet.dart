@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/field_model.dart';
 import '../providers/field_provider.dart';
 import '../l10n/app_strings.dart';
+import 'field_location_picker.dart';
 
 /// Modal bottom sheet allowing the farmer to set and customize their field profile.
 class EditFieldSheet extends StatefulWidget {
@@ -23,6 +24,9 @@ class EditFieldSheet extends StatefulWidget {
 
 class _EditFieldSheetState extends State<EditFieldSheet> {
   late RiceLocation _selectedLocation;
+  late double _latitude;
+  late double _longitude;
+  late bool _hasCustomCoordinates;
   late RiceVariety _selectedVariety;
   late DateTime _plantingDate;
   late double _areaHa;
@@ -35,9 +39,14 @@ class _EditFieldSheetState extends State<EditFieldSheet> {
     final currentField = FieldProvider.fieldOf(context);
 
     _selectedLocation = RiceLocation.commonLocations.firstWhere(
-      (loc) => loc.municipality.toLowerCase() == currentField.municipality.toLowerCase(),
+      (loc) =>
+          loc.municipality.toLowerCase() ==
+          currentField.municipality.toLowerCase(),
       orElse: () => RiceLocation.commonLocations.first,
     );
+    _latitude = currentField.latitude;
+    _longitude = currentField.longitude;
+    _hasCustomCoordinates = currentField.hasCustomCoordinates;
 
     _selectedVariety = RiceVariety.commonVarieties.firstWhere(
       (v) => currentField.varietyName.contains(v.code),
@@ -80,13 +89,31 @@ class _EditFieldSheetState extends State<EditFieldSheet> {
     }
   }
 
+  Future<void> _pickMapLocation() async {
+    final point = await FieldLocationPicker.show(
+      context,
+      initialLatitude: _latitude,
+      initialLongitude: _longitude,
+    );
+    if (point != null && mounted) {
+      setState(() {
+        _latitude = point.latitude;
+        _longitude = point.longitude;
+        _hasCustomCoordinates = true;
+      });
+    }
+  }
+
   void _save() async {
     final newProfile = FieldProfile(
-      fieldName: _nameController.text.trim().isEmpty ? 'Main Paddy' : _nameController.text.trim(),
+      fieldName: _nameController.text.trim().isEmpty
+          ? 'Main Paddy'
+          : _nameController.text.trim(),
       municipality: _selectedLocation.municipality,
       province: _selectedLocation.province,
-      latitude: _selectedLocation.latitude,
-      longitude: _selectedLocation.longitude,
+      latitude: _latitude,
+      longitude: _longitude,
+      hasCustomCoordinates: _hasCustomCoordinates,
       plantingDate: _plantingDate,
       varietyName: '${_selectedVariety.code} (${_selectedVariety.popularName})',
       daysToMaturity: _selectedVariety.daysToMaturity,
@@ -105,10 +132,17 @@ class _EditFieldSheetState extends State<EditFieldSheet> {
       final s = AppStrings.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('🌾 ${s.fieldSavedSnackbar}'),
+          content: Row(
+            children: [
+              const Icon(Icons.grass_rounded, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Expanded(child: Text(s.fieldSavedSnackbar)),
+            ],
+          ),
           backgroundColor: const Color(0xFF191D24),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -122,7 +156,10 @@ class _EditFieldSheetState extends State<EditFieldSheet> {
     final dateStr = DateFormat('MMMM d, yyyy').format(_plantingDate);
 
     // Calculate live preview metrics
-    final daysElapsed = DateTime.now().difference(_plantingDate).inDays.clamp(1, _selectedVariety.daysToMaturity);
+    final daysElapsed = DateTime.now()
+        .difference(_plantingDate)
+        .inDays
+        .clamp(1, _selectedVariety.daysToMaturity);
 
     return Container(
       decoration: const BoxDecoration(
@@ -162,7 +199,8 @@ class _EditFieldSheetState extends State<EditFieldSheet> {
                     color: coral.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.terrain_rounded, color: coral, size: 22),
+                  child:
+                      const Icon(Icons.terrain_rounded, color: coral, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -180,7 +218,8 @@ class _EditFieldSheetState extends State<EditFieldSheet> {
                       const SizedBox(height: 2),
                       Text(
                         s.fieldSetupSub,
-                        style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
+                        style: TextStyle(
+                            fontSize: 12.5, color: Colors.grey.shade600),
                       ),
                     ],
                   ),
@@ -207,21 +246,28 @@ class _EditFieldSheetState extends State<EditFieldSheet> {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: coral,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       'Day $daysElapsed of ${_selectedVariety.daysToMaturity}',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       '${_selectedVariety.code} · ${_selectedLocation.municipality}',
-                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF191D24)),
+                      style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF191D24)),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -233,7 +279,10 @@ class _EditFieldSheetState extends State<EditFieldSheet> {
             // 1. Municipality / Location Picker
             Text(
               s.fieldLocationLabel,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563)),
+              style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF4B5563)),
             ),
             const SizedBox(height: 6),
             Container(
@@ -247,31 +296,70 @@ class _EditFieldSheetState extends State<EditFieldSheet> {
                 child: DropdownButton<RiceLocation>(
                   value: _selectedLocation,
                   isExpanded: true,
-                  icon: const Icon(Icons.arrow_drop_down_rounded, color: Color(0xFFFF7E55)),
+                  icon: const Icon(Icons.arrow_drop_down_rounded,
+                      color: Color(0xFFFF7E55)),
                   items: RiceLocation.commonLocations.map((loc) {
                     return DropdownMenuItem<RiceLocation>(
                       value: loc,
                       child: Row(
                         children: [
-                          const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFFFF7E55)),
+                          const Icon(Icons.location_on_outlined,
+                              size: 18, color: Color(0xFFFF7E55)),
                           const SizedBox(width: 8),
-                          Text(loc.displayName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          Text(loc.displayName,
+                              style: const TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     );
                   }).toList(),
                   onChanged: (val) {
-                    if (val != null) setState(() => _selectedLocation = val);
+                    if (val != null) {
+                      setState(() {
+                        _selectedLocation = val;
+                        _latitude = val.latitude;
+                        _longitude = val.longitude;
+                        _hasCustomCoordinates = false;
+                      });
+                    }
                   },
                 ),
               ),
             ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: _pickMapLocation,
+              icon: const Icon(Icons.map_outlined, size: 19),
+              label: Text(s.chooseOnMap),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF191D24),
+                side: const BorderSide(color: Color(0xFFD1D5DB)),
+                minimumSize: const Size.fromHeight(46),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+            if (_hasCustomCoordinates) ...[
+              const SizedBox(height: 6),
+              Text(
+                '${s.mapPinSelected}: ${_latitude.toStringAsFixed(5)}, '
+                '${_longitude.toStringAsFixed(5)}',
+                style: const TextStyle(
+                  color: Color(0xFF4B5563),
+                  fontSize: 12,
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
 
             // 2. Rice Variety Picker
             Text(
               s.fieldVarietyLabel,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563)),
+              style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF4B5563)),
             ),
             const SizedBox(height: 6),
             Container(
@@ -285,18 +373,21 @@ class _EditFieldSheetState extends State<EditFieldSheet> {
                 child: DropdownButton<RiceVariety>(
                   value: _selectedVariety,
                   isExpanded: true,
-                  icon: const Icon(Icons.arrow_drop_down_rounded, color: Color(0xFFFF7E55)),
+                  icon: const Icon(Icons.arrow_drop_down_rounded,
+                      color: Color(0xFFFF7E55)),
                   items: RiceVariety.commonVarieties.map((v) {
                     return DropdownMenuItem<RiceVariety>(
                       value: v,
                       child: Row(
                         children: [
-                          const Icon(Icons.grain_rounded, size: 18, color: Color(0xFF2E7D32)),
+                          const Icon(Icons.grain_rounded,
+                              size: 18, color: Color(0xFF2E7D32)),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               v.displayName,
-                              style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                  fontSize: 13.5, fontWeight: FontWeight.w600),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -315,13 +406,17 @@ class _EditFieldSheetState extends State<EditFieldSheet> {
             // 3. Planting Date Picker
             Text(
               s.fieldDateLabel,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563)),
+              style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF4B5563)),
             ),
             const SizedBox(height: 6),
             GestureDetector(
               onTap: _pickDate,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
@@ -329,14 +424,22 @@ class _EditFieldSheetState extends State<EditFieldSheet> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.calendar_today_rounded, size: 18, color: Color(0xFFFF7E55)),
+                    const Icon(Icons.calendar_today_rounded,
+                        size: 18, color: Color(0xFFFF7E55)),
                     const SizedBox(width: 10),
                     Text(
                       dateStr,
-                      style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600, color: Color(0xFF191D24)),
+                      style: const TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF191D24)),
                     ),
                     const Spacer(),
-                    const Text('Change', style: TextStyle(color: Color(0xFFFF7E55), fontWeight: FontWeight.w700, fontSize: 13)),
+                    const Text('Change',
+                        style: TextStyle(
+                            color: Color(0xFFFF7E55),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13)),
                   ],
                 ),
               ),
@@ -346,7 +449,10 @@ class _EditFieldSheetState extends State<EditFieldSheet> {
             // 4. Field Size (Area in Hectares)
             Text(
               s.fieldAreaLabel,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563)),
+              style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF4B5563)),
             ),
             const SizedBox(height: 6),
             Container(
@@ -359,20 +465,29 @@ class _EditFieldSheetState extends State<EditFieldSheet> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.remove_circle_outline, color: Color(0xFFFF7E55)),
-                    onPressed: _areaHa > 0.25 ? () => setState(() => _areaHa = (_areaHa - 0.25).clamp(0.25, 20.0)) : null,
+                    icon: const Icon(Icons.remove_circle_outline,
+                        color: Color(0xFFFF7E55)),
+                    onPressed: _areaHa > 0.25
+                        ? () => setState(
+                            () => _areaHa = (_areaHa - 0.25).clamp(0.25, 20.0))
+                        : null,
                   ),
                   Expanded(
                     child: Center(
                       child: Text(
                         '${_areaHa.toStringAsFixed(2)} ha (${(_areaHa * 10000).toInt()} m²)',
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF191D24)),
+                        style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF191D24)),
                       ),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.add_circle_outline, color: Color(0xFFFF7E55)),
-                    onPressed: () => setState(() => _areaHa = (_areaHa + 0.25).clamp(0.25, 20.0)),
+                    icon: const Icon(Icons.add_circle_outline,
+                        color: Color(0xFFFF7E55)),
+                    onPressed: () => setState(
+                        () => _areaHa = (_areaHa + 0.25).clamp(0.25, 20.0)),
                   ),
                 ],
               ),
@@ -387,11 +502,15 @@ class _EditFieldSheetState extends State<EditFieldSheet> {
                 foregroundColor: Colors.white,
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
               ),
               child: Text(
                 s.saveField,
-                style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, letterSpacing: 0.3),
+                style: const TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.3),
               ),
             ),
           ],

@@ -1,15 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'providers/language_provider.dart';
 import 'providers/field_provider.dart';
+import 'screens/firebase_auth_screen.dart';
 import 'screens/splash_screen.dart';
+import 'services/api_service.dart';
+import 'services/firebase_auth_service.dart';
+import 'services/firebase_options.dart';
 
-void main() {
-  runApp(const PalayPlanApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  FirebaseAuthService? authService;
+  final firebaseOptions = FirebaseClientOptions.current;
+  if (firebaseOptions != null) {
+    await Firebase.initializeApp(options: firebaseOptions);
+    authService = FirebaseAuthService(
+      auth: FirebaseAuth.instance,
+      api: ApiService(),
+    );
+  }
+
+  runApp(PalayPlanApp(authService: authService));
 }
 
 class PalayPlanApp extends StatelessWidget {
-  const PalayPlanApp({super.key});
+  const PalayPlanApp({super.key, this.authService});
+
+  final FirebaseAuthService? authService;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +86,8 @@ class PalayPlanApp extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                   textStyle: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -80,7 +101,8 @@ class PalayPlanApp extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                   textStyle: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -117,7 +139,9 @@ class PalayPlanApp extends StatelessWidget {
                 ),
               ),
             ),
-            home: const SplashScreen(),
+            home: authService == null
+                ? const SplashScreen()
+                : FirebaseAuthGate(service: authService!),
           );
         },
       ),

@@ -119,8 +119,7 @@ class ResultScreen extends StatelessWidget {
           // Body content
           SliverToBoxAdapter(
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -429,7 +428,11 @@ class _SeverityCard extends StatelessWidget {
   (String, Color, IconData) _severity(AppStrings s) {
     final c = prediction.confidence;
     if (c >= 0.90) {
-      return (s.resultHighRisk, const Color(0xFFD32F2F), Icons.crisis_alert_rounded);
+      return (
+        s.resultHighRisk,
+        const Color(0xFFD32F2F),
+        Icons.crisis_alert_rounded
+      );
     }
     if (c >= 0.75) {
       return (s.resultMedRisk, const Color(0xFFE65100), Icons.warning_rounded);
@@ -489,14 +492,11 @@ class _SeverityCard extends StatelessWidget {
             runSpacing: 8,
             children: [
               _ActionChip(
-                  icon: Icons.person_outline_rounded,
-                  label: s.chipConsult),
+                  icon: Icons.person_outline_rounded, label: s.chipConsult),
               _ActionChip(
                   icon: Icons.medical_services_outlined,
                   label: s.chipFungicide),
-              _ActionChip(
-                  icon: Icons.camera_alt_outlined,
-                  label: s.chipRescan),
+              _ActionChip(icon: Icons.camera_alt_outlined, label: s.chipRescan),
             ],
           ),
         ],
@@ -599,8 +599,8 @@ class _LowConfidenceCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   s.resultLowConfSub,
-                  style: const TextStyle(
-                      fontSize: 13.5, color: Color(0xFF5D4037)),
+                  style:
+                      const TextStyle(fontSize: 13.5, color: Color(0xFF5D4037)),
                 ),
               ],
             ),
@@ -668,7 +668,17 @@ class _ActionButtons extends StatelessWidget {
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('📋 Report saved!'),
+                  content: Row(
+                    children: [
+                      Icon(
+                        Icons.description_outlined,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Text('Report saved!'),
+                    ],
+                  ),
                   duration: Duration(seconds: 2),
                 ),
               );

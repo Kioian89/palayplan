@@ -37,25 +37,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
       icon: Icons.agriculture,
       color: Color(0xFF795548),
       label: 'Land Preparation & Sowing',
-      emoji: '🌱',
     ),
     _PhaseConfig(
       icon: Icons.energy_savings_leaf,
       color: Color(0xFF2E7D32),
       label: 'Transplanting & Vegetative Growth',
-      emoji: '🌿',
     ),
     _PhaseConfig(
       icon: Icons.science,
       color: Color(0xFFF57C00),
       label: 'Nutrient Management / Fertilization',
-      emoji: '💊',
     ),
     _PhaseConfig(
       icon: Icons.grass,
       color: Color(0xFFE65100),
       label: 'Ripening & Harvest',
-      emoji: '🌾',
     ),
   ];
 
@@ -137,7 +133,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(Icons.calendar_month, color: Colors.white, size: 28),
+                  child: const Icon(Icons.calendar_month,
+                      color: Colors.white, size: 28),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -166,7 +163,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
@@ -197,7 +195,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       style: const TextStyle(fontSize: 13),
                     ),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 14, horizontal: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -206,7 +205,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       final picked = await showDatePicker(
                         context: context,
                         initialDate: _startDate,
-                        firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                        firstDate:
+                            DateTime.now().subtract(const Duration(days: 365)),
                         lastDate: DateTime.now().add(const Duration(days: 365)),
                       );
                       if (picked != null) setState(() => _startDate = picked);
@@ -216,10 +216,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 const SizedBox(width: 12),
                 Container(
                   decoration: BoxDecoration(
-                    border: Border.all(color: cs.outline.withValues(alpha: 0.5)),
+                    border:
+                        Border.all(color: cs.outline.withValues(alpha: 0.5)),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<int>(
                       value: _daysToMaturity,
@@ -231,12 +233,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               value: d,
                               child: Text(
                                 '$d days',
-                                style: const TextStyle(fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600),
                               ),
                             ),
                           )
                           .toList(),
-                      onChanged: (val) => setState(() => _daysToMaturity = val ?? 110),
+                      onChanged: (val) =>
+                          setState(() => _daysToMaturity = val ?? 110),
                     ),
                   ),
                 ),
@@ -266,7 +270,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
             child: ListView.builder(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               itemCount: phases.length,
-              itemBuilder: (context, i) => _PhaseCard(phase: phases[i], fmt: fmt, index: i),
+              itemBuilder: (context, i) =>
+                  _PhaseCard(phase: phases[i], fmt: fmt, index: i),
             ),
           ),
         ],
@@ -282,7 +287,8 @@ class _PhaseCard extends StatelessWidget {
   final DateFormat fmt;
   final int index;
 
-  const _PhaseCard({required this.phase, required this.fmt, required this.index});
+  const _PhaseCard(
+      {required this.phase, required this.fmt, required this.index});
 
   @override
   Widget build(BuildContext context) {
@@ -312,7 +318,8 @@ class _PhaseCard extends StatelessWidget {
               Container(width: 5, color: color),
               // Icon circle
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
                 child: Container(
                   width: 48,
                   height: 48,
@@ -321,9 +328,10 @@ class _PhaseCard extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Center(
-                    child: Text(
-                      phase.config.emoji,
-                      style: const TextStyle(fontSize: 22),
+                    child: Icon(
+                      phase.config.icon,
+                      color: color,
+                      size: 22,
                     ),
                   ),
                 ),
@@ -368,7 +376,8 @@ class _PhaseCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(right: 16),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
@@ -397,12 +406,10 @@ class _PhaseConfig {
   final IconData icon;
   final Color color;
   final String label;
-  final String emoji;
   const _PhaseConfig({
     required this.icon,
     required this.color,
     required this.label,
-    required this.emoji,
   });
 }
 
