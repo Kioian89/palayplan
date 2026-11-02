@@ -249,8 +249,19 @@ The test suite contains **34 automated tests** covering core agronomy, ML models
 
 ---
 
+## 🤝 Community Standards & Contributing
+
+We welcome contributions from agronomists, software engineers, and agricultural extension workers!
+
+* 📜 **[Code of Conduct](CODE_OF_CONDUCT.md)**: Community standards, Farmer-First principles, and zero tolerance for harassment.
+* 🛠️ **[Contributing Guide](CONTRIBUTING.md)**: Step-by-step development setup, coding standards, and PalayCheck agronomic verification.
+* 🔒 **[Security Policy](SECURITY.md)**: Vulnerability disclosure and our commitment to farmer data privacy.
+
+---
+
 ## 📄 License & Attribution
 
-* Developed for Philippine smallholder rice farmers and agricultural technicians.
+* Released under the **[MIT License](LICENSE)**. Copyright © 2026 PalayPlan Contributors.
+* Developed for Philippine smallholder rice farmers, agrarian reform communities, and agricultural technicians.
 * OpenStreetMap contributors for map tiles.
 * Unsplash Philippine agricultural photography.
