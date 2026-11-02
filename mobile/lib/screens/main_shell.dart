@@ -152,7 +152,7 @@ class _MainShellState extends State<MainShell>
                       height: 52,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFFFF8A65), Color(0xFFFF6E40)],
+                          colors: [Color(0xFF2E7D32), Color(0xFF43A047)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -160,8 +160,8 @@ class _MainShellState extends State<MainShell>
                         boxShadow: [
                           BoxShadow(
                             color:
-                                const Color(0xFFFF6E40).withValues(alpha: 0.4),
-                            blurRadius: 12,
+                                const Color(0xFF2E7D32).withValues(alpha: 0.45),
+                            blurRadius: 14,
                             offset: const Offset(0, 4),
                           ),
                         ],
@@ -218,7 +218,7 @@ class _NavBarItem extends StatelessWidget {
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFFF8A65).withValues(alpha: 0.15)
+              ? const Color(0xFF2E7D32).withValues(alpha: 0.18)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
@@ -233,7 +233,7 @@ class _NavBarItem extends StatelessWidget {
                 icon,
                 size: 24,
                 color: isSelected
-                    ? const Color(0xFFFF8A65)
+                    ? const Color(0xFF4CAF50)
                     : const Color(0xFF7E848D),
               ),
             ),
@@ -243,7 +243,7 @@ class _NavBarItem extends StatelessWidget {
                 width: 4,
                 height: 4,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFFF8A65),
+                  color: Color(0xFF4CAF50),
                   shape: BoxShape.circle,
                 ),
               ),

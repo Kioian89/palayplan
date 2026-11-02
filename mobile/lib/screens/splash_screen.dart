@@ -123,7 +123,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.language_rounded, size: 14, color: Color(0xFFFF7E55)),
+                                const Icon(Icons.language_rounded, size: 14, color: Color(0xFF2E7D32)),
                                 const SizedBox(width: 3),
                                 Text(
                                   s.lang.name.substring(0, 2).toUpperCase(),
@@ -262,7 +262,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         width: 18,
                         height: 6,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFF7E55),
+                          color: const Color(0xFF2E7D32),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),
@@ -314,7 +314,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                             height: 18,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.2,
-                              color: Color(0xFFFF7E55),
+                              color: Color(0xFF4CAF50),
                             ),
                           ),
                           const SizedBox(width: 12),

@@ -33,7 +33,7 @@ class ApiService {
 
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.5.244:8000', // Android emulator -> localhost
+    defaultValue: 'http://10.0.2.2:8000', // Android emulator loopback alias to host machine
   );
 
   Future<Map<String, dynamic>> verifyFirebaseToken(String idToken) async {
