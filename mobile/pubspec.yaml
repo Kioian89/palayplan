@@ -41,3 +41,4 @@ flutter:
     - assets/models/
     - assets/icons/
     - assets/images/
+    - shorebird.yaml
