@@ -6,10 +6,12 @@
 class DiseasePrediction {
   final String label;
   final double confidence; // 0.0 to 1.0
+  final List<DiseaseCandidate> candidates;
 
   const DiseasePrediction({
     required this.label,
     required this.confidence,
+    this.candidates = const [],
   });
 
   /// User-friendly capitalized name, e.g. "Bacterial Leaf Blight"
@@ -145,4 +147,17 @@ class DiseasePrediction {
         return 'Consult Technician';
     }
   }
+}
+
+class DiseaseCandidate {
+  final String label;
+  final double confidence;
+
+  const DiseaseCandidate({
+    required this.label,
+    required this.confidence,
+  });
+
+  String get displayName =>
+      DiseasePrediction(label: label, confidence: confidence).displayName;
 }

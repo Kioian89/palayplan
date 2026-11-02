@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
@@ -16,18 +17,31 @@ class DiseaseClassifier {
   Future<void> initialize() async {
     if (_isInitialized) return;
     try {
-      final labelData = await rootBundle.loadString('assets/models/labels.txt');
+      // 1. Prefer the comprehensive 10-class model (with healthy leaf detection)
+      String modelAsset = 'assets/models/rice_model_10class.tflite';
+      String labelAsset = 'assets/models/labels_10class.txt';
+
+      String labelData;
+      try {
+        labelData = await rootBundle.loadString(labelAsset);
+        _interpreter = await Interpreter.fromAsset(modelAsset);
+      } catch (e) {
+        debugPrint('Falling back to 3-class rice model: $e');
+        modelAsset = 'assets/models/rice_model.tflite';
+        labelAsset = 'assets/models/labels.txt';
+        labelData = await rootBundle.loadString(labelAsset);
+        _interpreter = await Interpreter.fromAsset(modelAsset);
+      }
+
       _labels = labelData
           .split('\n')
           .map((s) => s.trim())
           .where((s) => s.isNotEmpty)
           .toList();
 
-      _interpreter =
-          await Interpreter.fromAsset('assets/models/rice_model.tflite');
       _isInitialized = true;
       debugPrint(
-          'DiseaseClassifier (Native) initialized with ${_labels.length} classes: $_labels');
+          'DiseaseClassifier initialized with ${_labels.length} classes from $modelAsset: $_labels');
     } catch (e) {
       _interpreter?.close();
       _interpreter = null;
@@ -59,10 +73,11 @@ class DiseaseClassifier {
       throw Exception('Could not decode image file.');
     }
 
-    // Resize to 224x224
-    final resized = img.copyResize(image, width: 224, height: 224);
+    // High accuracy preprocessing:
+    // Center-crop to 1:1 square first to maintain natural lesion shapes and leaf textures
+    final square = img.copyResizeCropSquare(image, size: 224);
 
-    // Model expects [1, 224, 224, 3] with values normalized [0.0, 1.0]
+    // Model expects [1, 224, 224, 3] normalized [0.0, 1.0]
     final input = List.generate(
       1,
       (_) => List.generate(
@@ -70,7 +85,7 @@ class DiseaseClassifier {
         (y) => List.generate(
           224,
           (x) {
-            final pixel = resized.getPixel(x, y);
+            final pixel = square.getPixel(x, y);
             return [
               pixel.r / 255.0,
               pixel.g / 255.0,
@@ -84,21 +99,36 @@ class DiseaseClassifier {
     final output = List.generate(1, (_) => List.filled(_labels.length, 0.0));
     _interpreter!.run(input, output);
 
-    final probabilities = output[0];
-    int maxIndex = 0;
-    double maxProb = probabilities[0];
-
-    for (int i = 1; i < probabilities.length; i++) {
-      if (probabilities[i] > maxProb) {
-        maxProb = probabilities[i];
-        maxIndex = i;
+    // Apply softmax normalization if outputs are raw logits
+    var probabilities = List<double>.from(output[0].map((e) => (e as num).toDouble()));
+    final sum = probabilities.fold<double>(0.0, (acc, val) => acc + val);
+    if ((sum - 1.0).abs() > 0.05) {
+      final maxLogit = probabilities.reduce(math.max);
+      final exps = probabilities.map((v) => math.exp(v - maxLogit)).toList();
+      final expSum = exps.fold<double>(0.0, (acc, val) => acc + val);
+      if (expSum > 0) {
+        probabilities = exps.map((v) => v / expSum).toList();
       }
     }
 
-    final label = (maxIndex < _labels.length) ? _labels[maxIndex] : 'unknown';
+    // Rank candidates by probability
+    final indexed = List.generate(
+      probabilities.length,
+      (i) => MapEntry(i < _labels.length ? _labels[i] : 'unknown', probabilities[i]),
+    )..sort((a, b) => b.value.compareTo(a.value));
+
+    final topLabel = indexed.isNotEmpty ? indexed.first.key : 'unknown';
+    final topProb = indexed.isNotEmpty ? indexed.first.value : 0.0;
+
+    final candidates = indexed
+        .take(3)
+        .map((e) => DiseaseCandidate(label: e.key, confidence: e.value))
+        .toList();
+
     return DiseasePrediction(
-      label: label,
-      confidence: maxProb,
+      label: topLabel,
+      confidence: topProb,
+      candidates: candidates,
     );
   }
 

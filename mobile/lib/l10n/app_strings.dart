@@ -186,6 +186,10 @@ class AppStrings {
       _pick('Get Fungicide', 'Maghanda ng Fungicide', 'Pag-andam og Fungicide');
   String get chipRescan =>
       _pick('Scan Again', 'I-scan Ulit', 'I-scan Pag-usab');
+  String get resultTopCandidates => _pick(
+      'Analysis Candidates',
+      'Iba Pang Posibleng Sakit',
+      'Uban Pang Posibleng Sakit');
 
   // ── Weather Screen ─────────────────────────────────────────────────────────
   String get weatherTitle =>

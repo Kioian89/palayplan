@@ -133,6 +133,12 @@ class ResultScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
 
+                    // Top candidates (if multiple exist)
+                    if (prediction.candidates.length > 1) ...[
+                      _CandidatesCard(candidates: prediction.candidates),
+                      const SizedBox(height: 16),
+                    ],
+
                     // Treatment card
                     _TreatmentCard(
                         prediction: prediction, isHealthy: isHealthy),
@@ -147,6 +153,14 @@ class ResultScreen extends StatelessWidget {
                     // ── Low confidence card ───────────────────────────────
                     _LowConfidenceCard(confidencePct: confidencePct),
                     const SizedBox(height: 16),
+
+                    if (prediction.candidates.isNotEmpty) ...[
+                      _CandidatesCard(
+                        candidates: prediction.candidates,
+                        isLowConfidence: true,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                   ],
 
                   // Disclaimer
@@ -537,6 +551,116 @@ class _ActionChip extends StatelessWidget {
                   fontSize: 12,
                   color: Color(0xFF374151),
                   fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Candidate Matches Card
+// ─────────────────────────────────────────────────────────────────────────────
+class _CandidatesCard extends StatelessWidget {
+  final List<DiseaseCandidate> candidates;
+  final bool isLowConfidence;
+
+  const _CandidatesCard({
+    required this.candidates,
+    this.isLowConfidence = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final s = AppStrings.of(context);
+    final displayCandidates = candidates
+        .where((c) => isLowConfidence || c.confidence >= 0.02)
+        .take(3)
+        .toList();
+
+    if (displayCandidates.length <= 1) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2EBE6), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.analytics_outlined,
+                  size: 18, color: Color(0xFF4A6B60)),
+              const SizedBox(width: 8),
+              Text(
+                s.resultTopCandidates,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1B3B36),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...displayCandidates.map((c) {
+            final pct = (c.confidence * 100).toStringAsFixed(1);
+            final isHealthy = c.label == 'healthy';
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        s.diseaseName(c.label),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2D3748),
+                        ),
+                      ),
+                      Text(
+                        '$pct%',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: isHealthy
+                              ? const Color(0xFF2E7D32)
+                              : const Color(0xFF4A5568),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: c.confidence.clamp(0.0, 1.0),
+                      minHeight: 6,
+                      backgroundColor: const Color(0xFFEDF2F0),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        isHealthy
+                            ? const Color(0xFF2E7D32)
+                            : const Color(0xFF1B3B36),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );
