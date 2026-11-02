@@ -4,7 +4,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'providers/language_provider.dart';
 import 'providers/field_provider.dart';
-import 'screens/firebase_auth_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/api_service.dart';
 import 'services/firebase_auth_service.dart';
@@ -16,11 +15,15 @@ Future<void> main() async {
   FirebaseAuthService? authService;
   final firebaseOptions = FirebaseClientOptions.current;
   if (firebaseOptions != null) {
-    await Firebase.initializeApp(options: firebaseOptions);
-    authService = FirebaseAuthService(
-      auth: FirebaseAuth.instance,
-      api: ApiService(),
-    );
+    try {
+      await Firebase.initializeApp(options: firebaseOptions);
+      authService = FirebaseAuthService(
+        auth: FirebaseAuth.instance,
+        api: ApiService(),
+      );
+    } catch (e) {
+      debugPrint('Firebase initialization error: $e');
+    }
   }
 
   runApp(PalayPlanApp(authService: authService));
@@ -139,9 +142,7 @@ class PalayPlanApp extends StatelessWidget {
                 ),
               ),
             ),
-            home: authService == null
-                ? const SplashScreen()
-                : FirebaseAuthGate(service: authService!),
+            home: SplashScreen(authService: authService),
           );
         },
       ),

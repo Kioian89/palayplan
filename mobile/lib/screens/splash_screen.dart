@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
+import '../services/firebase_auth_service.dart';
 import '../widgets/language_picker_sheet.dart';
+import 'firebase_auth_screen.dart';
 import 'main_shell.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  const SplashScreen({super.key, this.authService});
+
+  final FirebaseAuthService? authService;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -41,10 +45,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   void _navigateToHome() {
     if (!mounted) return;
     _timer?.cancel();
+    final Widget destination = widget.authService == null
+        ? const MainShell()
+        : FirebaseAuthGate(service: widget.authService!);
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, animation, secondaryAnimation) => const MainShell(),
+        pageBuilder: (_, animation, secondaryAnimation) => destination,
         transitionsBuilder: (_, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
