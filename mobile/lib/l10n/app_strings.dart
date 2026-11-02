@@ -203,6 +203,21 @@ class AppStrings {
       'Isaalang-alang ang pagpapaliban ng gawain',
       'Hunahunaa ang pagpalangan sa trabaho sa uma');
 
+  // ── Zoom Earth Satellite & Radar ──────────────────────────────────────────
+  String get zoomEarthTitle => _pick(
+      'Live Satellite & Radar', 'Live Satellite at Radar', 'Live Satellite ug Radar');
+  String get zoomEarthTagline => _pick(
+      'Zoom Earth Live Tracking', 'Zoom Earth Real-time Pagsubaybay', 'Zoom Earth Real-time Pagsubaybay');
+  String get zoomEarthRadar => _pick('Rain Radar', 'Radar ng Ulan', 'Radar sa Ulan');
+  String get zoomEarthSatellite => _pick('Satellite', 'Satellite', 'Satellite');
+  String get zoomEarthWind => _pick('Wind & Typhoon', 'Hangin at Bagyo', 'Hangin ug Bagyo');
+  String get zoomEarthOpenPrompt => _pick(
+      'Track live cloud formations, rain cells, and approaching tropical depressions.',
+      'Subaybayan ang galaw ng ulap, ulan, at papalapit na bagyo sa inyong lugar.',
+      'Subaya ang lihok sa panganod, ulan, ug nagkaduol nga bagyo sa imong dapit.');
+  String get zoomEarthExplore => _pick(
+      'Explore on Zoom Earth', 'Tingnan sa Zoom Earth', 'Tan-awa sa Zoom Earth');
+
   // ── Calendar Screen ────────────────────────────────────────────────────────
   String get calTitle => _pick('Cropping Calendar', 'Kalendaryo ng Pagtatanim',
       'Kalendaryo sa Pagtanom');

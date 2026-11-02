@@ -28,6 +28,7 @@
   - Cross-references crop growth stage + 7-day weather forecast
 
 ### Weather (v1.1)
+- **Zoom Earth Live Satellite & Radar** — Live satellite imagery, Doppler precipitation radar, and typhoon wind tracking centered on farmer field coordinates
 - **Open-Meteo Fallback** — Free weather API used automatically when OpenWeatherMap key is missing or fails
 - **Weather Descriptions** — Human-readable conditions (Sunny, Partly Cloudy, Heavy Rain, etc.) on Today hero card and all 7-day forecast cards
 - **Field Risk Classification** — Traffic-light (low/medium/high) badge per day
@@ -86,7 +87,8 @@
 | `settings_privacy_test.dart` | 3 | ✅ All pass |
 | `widget_test.dart` | 1 | ✅ All pass |
 | `yield_screen_test.dart` | 1 | ✅ All pass |
-| **Total** | **30** | ✅ **All pass** |
+| `zoom_earth_test.dart` | 2 | ✅ All pass |
+| **Total** | **32** | ✅ **All pass** |
 
 ---
 

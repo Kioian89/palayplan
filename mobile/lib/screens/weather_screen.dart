@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/weather_model.dart';
 import '../services/api_service.dart';
+import '../services/zoom_earth_service.dart';
 import '../providers/field_provider.dart';
 import '../widgets/edit_field_sheet.dart';
 import '../widgets/offline_data_notice.dart';
+import '../widgets/zoom_earth_card.dart';
 import '../l10n/app_strings.dart';
 
 class WeatherScreen extends StatefulWidget {
@@ -67,11 +69,24 @@ class _WeatherScreenState extends State<WeatherScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final s = AppStrings.of(context);
+    final field = FieldProvider.fieldOf(context);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(s.weatherTitle),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.satellite_alt_rounded),
+            tooltip: s.zoomEarthTitle,
+            onPressed: () {
+              ZoomEarthService.launchMap(
+                ZoomEarthService.radarUrl(
+                  lat: field.latitude,
+                  lon: field.longitude,
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.location_on_outlined),
             tooltip: 'Change Field Location',
@@ -115,6 +130,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
                       // Today Hero Banner
                       if (_forecast!.dailyForecast.isNotEmpty)
                         _TodayWeatherHero(day: _forecast!.dailyForecast.first),
+
+                      const SizedBox(height: 16),
+
+                      // Live Satellite & Radar (Zoom Earth)
+                      ZoomEarthCard(field: field),
 
                       const SizedBox(height: 18),
                       Padding(
