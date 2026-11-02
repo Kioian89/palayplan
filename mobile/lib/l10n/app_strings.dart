@@ -324,8 +324,30 @@ class AppStrings {
       'Sowing / Planting Date', 'Petsa ng Pagtatanim', 'Petsa sa Pagtanom');
   String get fieldAreaLabel => _pick('Field Area (Hectares)',
       'Laki ng Bukid (Ektarya)', 'Gidak-on sa Uma (Ektarya)');
+  String get fieldNameLabel => _pick(
+      'Field Name / Parcel', 'Pangalan ng Bukid / Parcela', 'Ngalan sa Uma / Parcela');
+  String get fieldAddNew => _pick(
+      '+ Add New Field', '+ Magdagdag ng Bukid', '+ Dugang Bag-ong Uma');
+  String get fieldSwitch => _pick(
+      'Select Field', 'Pumili ng Bukid', 'Pilia ang Uma');
+  String get fieldCustomLocationToggle => _pick(
+      'Type custom municipality & province',
+      'I-type ang sariling munisipalidad at probinsya',
+      'I-type ang kaugalingong munisipyo ug probinsya');
+  String get fieldMunicipalityLabel => _pick(
+      'Municipality / City', 'Munisipalidad / Lungsod', 'Munisipyo / Dakbayan');
+  String get fieldProvinceLabel => _pick(
+      'Province', 'Probinsya', 'Probinsya');
+  String get fieldDelete => _pick(
+      'Delete Field', 'Burahin ang Bukid', 'Papasa ang Uma');
+  String get fieldDeleteConfirm => _pick(
+      'Are you sure you want to delete this field profile?',
+      'Sigurado ka bang nais mong burahin ang profile ng bukid na ito?',
+      'Sigurado ka ba nga gusto nimong papason kini nga uma?');
   String get saveField =>
       _pick('Save Field Profile', 'I-save ang Profile', 'I-save ang Profile');
+  String get saveNewField => _pick(
+      'Save New Field', 'I-save ang Bagong Bukid', 'I-save ang Bag-ong Uma');
   String get fieldSavedSnackbar => _pick('Field profile updated!',
       'Nai-save na ang profile ng bukid!', 'Na-save na ang profile sa uma!');
 

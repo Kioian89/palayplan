@@ -7,7 +7,9 @@
 
 ## ✅ Shipped Features
 
-### Core App (v1.0)
+### Core App (v1.1)
+- **Multi-Field Management** — Farmers can add, customize, switch between, and manage multiple rice fields/paddies with custom names and individual acreage
+- **Custom Location & Map Pinning** — Type custom Philippine municipality & province or pick from catalog, with GPS detection and interactive map pin
 - **On-Device Disease Scanner** — TFLite model classifies 10 rice leaf conditions with 95.8% accuracy
 - **Trilingual Support** — Full English / Filipino (Tagalog) / Bisaya (Cebuano) via `AppStrings`
 - **Field Profile** — Variety, planting date, area, and GPS/map-pin location
@@ -88,7 +90,8 @@
 | `widget_test.dart` | 1 | ✅ All pass |
 | `yield_screen_test.dart` | 1 | ✅ All pass |
 | `zoom_earth_test.dart` | 2 | ✅ All pass |
-| **Total** | **32** | ✅ **All pass** |
+| `multi_field_test.dart` | 2 | ✅ All pass |
+| **Total** | **34** | ✅ **All pass** |
 
 ---
 
