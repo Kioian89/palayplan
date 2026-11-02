@@ -17,6 +17,7 @@ import 'settings_screen.dart';
 import '../services/firebase_auth_service.dart';
 import '../services/recommendation_service.dart';
 import '../widgets/smart_recommendation_card.dart';
+import 'yield_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.authService});
@@ -368,14 +369,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     _RiceFeatureCard(
                       imagePath: 'assets/images/card_scanner.jpg',
-                      icon: Icons.science_rounded,
-                      title: s.featFertilizer,
-                      subtitle: s.featFertilizerBadge,
+                      icon: Icons.auto_graph_rounded,
+                      title: s.yieldTitle,
+                      subtitle: s.featCalendarBadge,
                       accentColor: const Color(0xFFE65100),
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const CalendarScreen(),
+                          builder: (_) => const YieldScreen(),
                         ),
                       ),
                     ),

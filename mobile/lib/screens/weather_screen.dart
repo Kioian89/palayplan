@@ -146,8 +146,37 @@ class _TodayWeatherHero extends StatelessWidget {
 
   const _TodayWeatherHero({required this.day});
 
+  /// Derive a human-readable weather description from the forecast values.
+  String _weatherDescription(AppStrings s) {
+    final rain = day.rainProbabilityPct;
+    final temp = day.temperatureC;
+    final wind = day.windSpeedKph;
+    final humidity = day.humidityPct;
+
+    if (rain >= 80) return s.wdHeavyRain;
+    if (rain >= 60) {
+      return wind >= 40 ? s.wdStormyRain : s.wdRainy;
+    }
+    if (rain >= 40) return s.wdPartlyCloudy;
+    if (humidity >= 80 && temp >= 30) return s.wdHumidCloudy;
+    if (wind >= 40) return s.wdWindy;
+    if (temp >= 34) return s.wdHotSunny;
+    return s.wdSunny;
+  }
+
+  IconData _weatherIcon() {
+    final rain = day.rainProbabilityPct;
+    final wind = day.windSpeedKph;
+    if (rain >= 80) return Icons.thunderstorm_rounded;
+    if (rain >= 60) return wind >= 40 ? Icons.storm_rounded : Icons.umbrella_rounded;
+    if (rain >= 40) return Icons.wb_cloudy_rounded;
+    if (wind >= 40) return Icons.air_rounded;
+    return Icons.wb_sunny_rounded;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final s = AppStrings.of(context);
     final isRainy = day.rainProbabilityPct >= 50;
 
     return Container(
@@ -198,10 +227,30 @@ class _TodayWeatherHero extends StatelessWidget {
                 color:
                     isRainy ? const Color(0xFF81D4FA) : const Color(0xFFFFD54F),
                 size: 32,
+              ),            ],
+          ),
+          const SizedBox(height: 10),
+          // ── Weather Description Label ──────────────────────────────────────
+          Row(
+            children: [
+              Icon(
+                _weatherIcon(),
+                size: 16,
+                color: Colors.white70,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                _weatherDescription(s),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.1,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
@@ -313,8 +362,23 @@ class _DailyWeatherCard extends StatelessWidget {
 
   const _DailyWeatherCard({required this.day});
 
+  String _description(AppStrings s) {
+    final rain = day.rainProbabilityPct;
+    final temp = day.temperatureC;
+    final wind = day.windSpeedKph;
+    final humidity = day.humidityPct;
+    if (rain >= 80) return s.wdHeavyRain;
+    if (rain >= 60) return wind >= 40 ? s.wdStormyRain : s.wdRainy;
+    if (rain >= 40) return s.wdPartlyCloudy;
+    if (humidity >= 80 && temp >= 30) return s.wdHumidCloudy;
+    if (wind >= 40) return s.wdWindy;
+    if (temp >= 34) return s.wdHotSunny;
+    return s.wdSunny;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final s = AppStrings.of(context);
     final dateStr = DateFormat('EEE, MMM d').format(day.date);
     final isRainy = day.rainProbabilityPct >= 50;
 
@@ -363,9 +427,18 @@ class _DailyWeatherCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '${day.temperatureC.round()}°C · Humidity ${day.humidityPct.round()}% · Wind ${day.windSpeedKph.round()} kph',
+                  _description(s),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${day.temperatureC.round()}°C · ${day.humidityPct.round()}% humidity · ${day.windSpeedKph.round()} kph',
                   style: TextStyle(
-                    fontSize: 12.5,
+                    fontSize: 12,
                     color: Colors.grey.shade600,
                   ),
                 ),
