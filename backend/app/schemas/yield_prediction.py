@@ -10,6 +10,7 @@ class YieldPredictionRequest(BaseModel):
     start_date: date
     soil_type: str | None = None
     municipality: str
+    ecosystem_type: Literal["irrigated", "rainfed"] | None = None
 
 
 class YieldPredictionResponse(BaseModel):
@@ -17,6 +18,7 @@ class YieldPredictionResponse(BaseModel):
     predicted_yield_tons: float
     climate_risk_level: Literal["low", "medium", "high"]
     risk_factors: list[str]
+    prediction_note: str = ""
 
 
 class AdvisoryItem(BaseModel):

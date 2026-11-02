@@ -63,12 +63,19 @@ stay continuously available.
 
 ## Train the ML model
 ```bash
-python -m app.ml.train_model            # uses synthetic data by default
-python -m app.ml.train_model --data data/historical_yield.csv
+python -m app.ml.train_model
 ```
-This writes `app/ml/model_artifact/yield_model.joblib`, which `predict.py`
-loads automatically. Until this file exists, `/predict/yield` falls back to
-a simple heuristic so the API stays usable during early development.
+The trainer downloads quarterly irrigated and rainfed palay production and
+harvested-area tables from PSA OpenSTAT, combines them into regional yield per
+hectare, validates on held-out years, and writes
+`app/ml/model_artifact/yield_model.joblib`. The model uses region, harvest
+quarter, and year; its output is a regional historical baseline, not a
+field-level yield forecast. Climate risk remains a 7-day forecast heuristic:
+PSA does not provide labeled field-level climate-risk outcomes. The app
+discloses these limitations with its prediction.
+
+Sources: [PSA palay production table](https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/2E/CS/0012E4EVCP0.px)
+and [PSA harvested-area table](https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/2E/CS/0022E4EAHC0.px).
 
 ## Endpoints
 | Method | Path                | Purpose |

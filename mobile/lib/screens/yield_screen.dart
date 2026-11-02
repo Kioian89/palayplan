@@ -147,9 +147,12 @@ class _FieldSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
-    final daysSincePlanting =
-        DateTime.now().difference(field.plantingDate).inDays.clamp(0, field.daysToMaturity);
-    final harvestIn = (field.daysToMaturity - daysSincePlanting).clamp(0, field.daysToMaturity);
+    final daysSincePlanting = DateTime.now()
+        .difference(field.plantingDate)
+        .inDays
+        .clamp(0, field.daysToMaturity);
+    final harvestIn = (field.daysToMaturity - daysSincePlanting)
+        .clamp(0, field.daysToMaturity);
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -173,7 +176,8 @@ class _FieldSummaryCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.agriculture_rounded, color: Colors.white70, size: 18),
+              const Icon(Icons.agriculture_rounded,
+                  color: Colors.white70, size: 18),
               const SizedBox(width: 6),
               Text(
                 s.yieldFieldSummary,
@@ -246,7 +250,9 @@ class _SummaryPill extends StatelessWidget {
           const SizedBox(width: 4),
           Text(label,
               style: const TextStyle(
-                  color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600)),
+                  color: Colors.white,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -266,12 +272,20 @@ class _YieldResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final estimatedCavans = (result['estimated_yield_cavans'] as num?)?.toDouble() ?? 0;
-    final estimatedTons = (result['estimated_yield_tons'] as num?)?.toDouble() ?? 0;
-    final riskLevel = result['risk_level']?.toString() ?? 'low';
+    final estimatedCavans = ((result['predicted_yield_cavans'] ??
+                result['estimated_yield_cavans']) as num?)
+            ?.toDouble() ??
+        0;
+    final estimatedTons = ((result['predicted_yield_tons'] ??
+                result['estimated_yield_tons']) as num?)
+            ?.toDouble() ??
+        0;
+    final riskLevel =
+        (result['climate_risk_level'] ?? result['risk_level'])?.toString() ??
+            'low';
     final riskFactors = (result['risk_factors'] as List<dynamic>?) ?? [];
     final recommendations = (result['recommendations'] as List<dynamic>?) ?? [];
-    final confidence = (result['confidence_pct'] as num?)?.toDouble() ?? 85.0;
+    final modelNote = result['prediction_note']?.toString() ?? '';
 
     final Color riskColor = riskLevel == 'high'
         ? const Color(0xFFD32F2F)
@@ -396,37 +410,34 @@ class _YieldResultCard extends StatelessWidget {
                 '${s.yieldForField}: ${field.fieldAreaHa} ha · ${(estimatedCavans / field.fieldAreaHa).toStringAsFixed(1)} cav/ha',
                 style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
               ),
-              const SizedBox(height: 16),
-              // Confidence bar
-              Row(
-                children: [
-                  Text(
-                    s.yieldConfidence,
-                    style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF374151)),
+              if (modelNote.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF2F7F4),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const Spacer(),
-                  Text(
-                    '${confidence.toStringAsFixed(0)}%',
-                    style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF2E7D32)),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.info_outline,
+                          size: 18, color: Color(0xFF2E7D32)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          modelNote,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            height: 1.4,
+                            color: Color(0xFF374151),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: confidence / 100,
-                  backgroundColor: const Color(0xFFE5E7EB),
-                  valueColor: const AlwaysStoppedAnimation(Color(0xFF2E7D32)),
-                  minHeight: 7,
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -457,8 +468,7 @@ class _YieldResultCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Icon(Icons.circle,
-                              size: 6,
-                              color: Color(0xFFF57C00)),
+                              size: 6, color: Color(0xFFF57C00)),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -508,7 +518,8 @@ class _YieldResultCard extends StatelessWidget {
                             height: 22,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
+                              color: const Color(0xFF2E7D32)
+                                  .withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Text(
@@ -638,26 +649,25 @@ class _HowItWorksCard extends StatelessWidget {
             (Icons.wb_sunny_outlined, s.yieldStep1),
             (Icons.science_outlined, s.yieldStep2),
             (Icons.agriculture_outlined, s.yieldStep3),
-          ]
-              .map(
-                (item) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(item.$1, size: 18, color: const Color(0xFF6B7280)),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          item.$2,
-                          style: const TextStyle(
-                              fontSize: 13.5, color: Color(0xFF374151)),
-                        ),
-                      ),
-                    ],
+          ].map(
+            (item) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(item.$1, size: 18, color: const Color(0xFF6B7280)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      item.$2,
+                      style: const TextStyle(
+                          fontSize: 13.5, color: Color(0xFF374151)),
+                    ),
                   ),
-                ),
+                ],
               ),
+            ),
+          ),
         ],
       ),
     );
@@ -698,5 +708,3 @@ class _ErrorCard extends StatelessWidget {
     );
   }
 }
-
-
