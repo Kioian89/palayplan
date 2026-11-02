@@ -228,6 +228,26 @@ class AppStrings {
   String get advLoading => _pick('Fetching advisories…',
       'Kinukuha ang mga abiso…', 'Gikuha ang mga tambag…');
 
+  // ── Smart Field Recommendation ───────────────────────────────────────────
+  String get recTitle => _pick(
+      "Today's Field Recommendation",
+      'Matalinong Payo sa Bukid Ngayon',
+      'Maalamong Tambag sa Uma Karon');
+  String get recSubtitle => _pick(
+      'PhilRice PalayCheck Agro-Decision Engine',
+      'PhilRice PalayCheck Gabay sa Pagsasaka',
+      'PhilRice PalayCheck Giya sa Pag-uma');
+  String get recFertilizer =>
+      _pick('Nutrient & Fertilizer', 'Pataba at Abono', 'Abono ug Nutrisyon');
+  String get recWater => _pick(
+      'Water & Irrigation (AWD)', 'Tubig at Patubig (AWD)', 'Tubig ug Patubig (AWD)');
+  String get recPest => _pick(
+      'Pest & Disease Scouting', 'Pagsusuri sa Peste at Sakit', 'Pagsusi sa Peste ug Sakit');
+  String get recApplySafe => _pick(
+      'Optimal Weather Window', 'Magandang Oras Maglagay', 'Maayong Panahon Ibutang');
+  String get recDelayRain => _pick(
+      'Delay Application (Rain Risk)', 'Ipantig Muna (Peligro sa Ulan)', 'I-oktaba Una (Peligro sa Ulan)');
+
   // ── Field Profile Settings ────────────────────────────────────────────────
   String get fieldSetupTitle =>
       _pick('My Field Profile', 'Profile ng Bukid', 'Profile sa Uma');

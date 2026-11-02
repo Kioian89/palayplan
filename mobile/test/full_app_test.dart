@@ -72,7 +72,7 @@ void main() {
       // Helper: scroll until the text widget is visible, then tap it.
       Future<void> scrollAndTap(String text) async {
         await tester.scrollUntilVisible(
-          find.text(text).first,
+          find.text(text),
           200.0,
           scrollable: find.byType(Scrollable).first,
           maxScrolls: 100,

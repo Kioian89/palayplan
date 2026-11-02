@@ -15,6 +15,8 @@ import 'advisory_screen.dart';
 import 'scan_screen.dart';
 import 'settings_screen.dart';
 import '../services/firebase_auth_service.dart';
+import '../services/recommendation_service.dart';
+import '../widgets/smart_recommendation_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.authService});
@@ -304,6 +306,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
+              // ── Smart Field Recommendation Card ──────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: SmartRecommendationCard(
+                    recommendation: RecommendationService.generate(
+                      profile: field,
+                      lang: s.lang,
+                    ),
+                  ),
+                ),
+              ),
+
               // ── Section Title: Quick Access ──────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
@@ -397,7 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        s.advTitle,
+                        s.navAdvisory,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
