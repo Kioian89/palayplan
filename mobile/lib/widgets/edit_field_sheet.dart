@@ -665,10 +665,21 @@ class _EditFieldSheetState extends State<EditFieldSheet> {
                           const Icon(Icons.grain_rounded, size: 18, color: Color(0xFF2E7D32)),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text(
-                              v.displayName,
-                              style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
-                              overflow: TextOverflow.ellipsis,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  v.displayName,
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  v.ecosystem,
+                                  style: TextStyle(fontSize: 10.5, color: Colors.grey.shade600),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
                           ),
                         ],
