@@ -63,21 +63,13 @@ jobs:
         if: "${{ github.event.inputs.build_type != 'debug' }}"
         run: |
           flutter build apk --release \
-            --dart-define=FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }} \
-            --dart-define=FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }} \
-            --dart-define=FIREBASE_API_KEY_ANDROID=${{ secrets.FIREBASE_API_KEY_ANDROID }} \
-            --dart-define=FIREBASE_APP_ID_ANDROID=${{ secrets.FIREBASE_APP_ID_ANDROID }} \
-            --dart-define=GOOGLE_SIGN_IN_WEB_CLIENT_ID=${{ secrets.GOOGLE_SIGN_IN_WEB_CLIENT_ID }}
+            --dart-define=API_BASE_URL=https://palayplan.onrender.com
 
       - name: Build APK (Debug)
         if: "${{ github.event.inputs.build_type == 'debug' }}"
         run: |
           flutter build apk --debug \
-            --dart-define=FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }} \
-            --dart-define=FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }} \
-            --dart-define=FIREBASE_API_KEY_ANDROID=${{ secrets.FIREBASE_API_KEY_ANDROID }} \
-            --dart-define=FIREBASE_APP_ID_ANDROID=${{ secrets.FIREBASE_APP_ID_ANDROID }} \
-            --dart-define=GOOGLE_SIGN_IN_WEB_CLIENT_ID=${{ secrets.GOOGLE_SIGN_IN_WEB_CLIENT_ID }}
+            --dart-define=API_BASE_URL=https://palayplan.onrender.com
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
@@ -93,4 +85,3 @@ jobs:
           files: mobile/build/app/outputs/flutter-apk/app-*.apk
           name: "PalayPlan ${{ github.ref_name }}"
           generate_release_notes: true
-
