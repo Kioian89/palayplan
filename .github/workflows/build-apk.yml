@@ -72,6 +72,8 @@ jobs:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
         run: |
           shorebird patch android \
+            --allow-asset-diffs \
+            --allow-native-diffs \
             --dart-define=API_BASE_URL=https://palayplan.onrender.com
 
       - name: Build APK (Release / Shorebird)
