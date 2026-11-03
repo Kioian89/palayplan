@@ -296,7 +296,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
                   const SizedBox(height: 16),
 
-                  // Bottom Pill Button with Loading Indicator
+                  // Bottom Pill Button
                   GestureDetector(
                     onTap: _navigateToHome,
                     child: Container(
@@ -316,15 +316,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.2,
-                              color: Color(0xFF4CAF50),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
                           Text(
                             s.getStarted,
                             style: const TextStyle(
@@ -334,7 +325,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                               letterSpacing: 0.3,
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 8),
                           const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
                         ],
                       ),

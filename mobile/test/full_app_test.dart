@@ -54,7 +54,7 @@ void main() {
       // 1. Verify SplashScreen is displayed
       expect(find.text('PalayPlan'), findsOneWidget);
       expect(find.text('Smart Agro-Weather & Rice Yield Optimization'), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('Get Started'), findsOneWidget);
 
       // 2. Fast-forward past splash timer (2.5 seconds)
       await tester.pump(const Duration(milliseconds: 2600));
