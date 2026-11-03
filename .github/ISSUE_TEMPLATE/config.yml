@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📧 Email Maintainer Directly
+    url: mailto:banquiladrian@gmail.com
+    about: For urgent questions, partnership inquiries, or private support.
+  - name: 🔒 Report a Security Vulnerability
+    url: mailto:banquiladrian@gmail.com?subject=[SECURITY]%20PalayPlan%20Vulnerability%20Report
+    about: Follow responsible disclosure as detailed in our Security Policy.

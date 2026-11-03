@@ -92,6 +92,12 @@ uvicorn app.main:app --reload
 - Disease models must operate within mobile memory and compute limits (TFLite quantized models $\le 20$ MB preferred).
 - Keep confidence thresholds clear; never provide false high certainty for unknown or non-leaf photos.
 - Ensure all 10 rice leaf classes have actionable cultural and chemical treatments aligned with Philippine Fertilizer and Pesticide Authority (FPA) guidelines.
+- To retrain or fine-tune the 10-class vision model, use the official Colab notebook in `ml/notebooks/rice_disease_training.ipynb`. Always test exported `.tflite` models with `test/disease_classifier_test.dart`.
+
+### Over-The-Air (OTA) Updates & Shorebird
+- PalayPlan uses **Shorebird** for background OTA patches.
+- **Rule:** OTA patches must **only** contain Dart code / UI logic changes. Never include modified native code (C++, Kotlin, Java) or new Android permissions in an OTA patch.
+- Native changes require a full new version tag (e.g. `v0.3.2`) to produce a fresh APK.
 
 ### Agronomy & PalayCheck Science
 - Adhere strictly to the **9 Key Checks of PhilRice PalayCheck**:

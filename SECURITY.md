@@ -6,8 +6,8 @@ We provide security updates and patches for the following versions of PalayPlan:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
-| < 0.1.0 | :x:                |
+| 0.3.x   | :white_check_mark: |
+| < 0.3.0 | :x:                |
 
 ---
 
@@ -18,7 +18,7 @@ The PalayPlan team takes the security of our application and the privacy of our 
 If you believe you have discovered a security vulnerability in PalayPlan (including mobile authentication, backend APIs, or local offline caching), please report it responsibly:
 
 1. **Do not** report security vulnerabilities through public GitHub issues or discussions.
-2. Email the maintainer directly at **anonymousdri544@gmail.com** with the subject line: `[SECURITY] PalayPlan Vulnerability Report`.
+2. Email the maintainer directly at **banquiladrian@gmail.com** with the subject line: `[SECURITY] PalayPlan Vulnerability Report`.
 3. Include detailed steps to reproduce the issue, potential impact, and your suggested mitigation if available.
 
 ### What You Can Expect:
