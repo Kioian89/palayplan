@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+﻿from datetime import datetime, timedelta
 from pathlib import Path
 
 import firebase_admin
@@ -87,9 +87,16 @@ def _verify_firebase_id_token(token: str) -> dict:
 
 
 def create_access_token(user_id: int) -> str:
+    secret = settings.jwt_secret_key.strip()
+    if not secret:
+        raise HTTPException(
+            status_code=500,
+            detail="JWT secret is not configured.",
+        )
+
     expire = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
     payload = {"sub": str(user_id), "exp": expire}
-    return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    return jwt.encode(payload, secret, algorithm=settings.jwt_algorithm)
 
 
 @router.post("/register", response_model=TokenResponse)

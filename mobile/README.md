@@ -16,16 +16,33 @@ For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
 
-## Firebase Authentication
+## Firebase Authentication and field sync
 
-The app supports Firebase Email/Password and Google sign-in. Authentication is
-enabled when Firebase options are supplied; without them the existing guest
-startup flow remains available.
+The app supports Firebase Email/Password and Google sign-in. Signed-in field
+profiles sync in real time through Cloud Firestore under
+`users/{uid}/appData/fieldProfiles`; local SharedPreferences remains the guest
+store and an offline cache. Existing locally saved fields are copied to the
+first Firebase account that signs in on that device when that account has no
+saved Firestore profile. New account data is stored in a per-user local cache.
 
-1. Create a Firebase project, register the Android app (`com.example.palayplan`),
-   iOS app (`com.example.palayplan`), and a web app if needed.
+1. Create a Firebase project and register the Android app
+   (`com.example.palayplan`), iOS app (`com.example.palayplan`), and a web app
+   if needed.
 2. Enable **Email/Password** and **Google** under Firebase Authentication
-   sign-in providers.
+   sign-in providers and create the Cloud Firestore database. From the
+   repository root, run the setup script. It checks Firebase CLI
+   authentication and deploys the included user-scoped security rules:
+
+   ```bash
+   .\setup-firebase.ps1 -ProjectId YOUR_FIREBASE_PROJECT_ID
+   ```
+
+   The rules are in [`firestore.rules`](../firestore.rules) and allow each
+   signed-in user to access only their own field profile document. All other
+   Firestore documents are denied by default. The script does not create
+   Firebase projects or configure Authentication providers; complete those
+   steps in Firebase Console first.
+
 3. Copy `firebase.env.example.json` to the ignored `firebase.env.json`, then
    replace its values with each app's Firebase API key/app ID and the project's
    sender ID and project ID. Run with:
@@ -42,16 +59,19 @@ startup flow remains available.
    its `REVERSED_CLIENT_ID` as a URL scheme in the iOS Runner target. For web,
    set `GOOGLE_SIGN_IN_WEB_CLIENT_ID` in the local JSON file and authorize the
    app's domain in Google/Firebase settings.
-5. On the backend, set `FIREBASE_CREDENTIALS_PATH` in `backend/.env` to a
-   Firebase Admin service-account JSON file. Keep that server credential out
-   of source control and never put it in the Flutter app.
+5. If other clients need server-side Firebase token verification, set
+   `FIREBASE_CREDENTIALS_PATH` in `backend/.env` to a Firebase Admin
+   service-account JSON file. Keep that server credential out of source control
+   and never put it in the Flutter app.
 
 After configuration, the app opens the sign-in screen until authenticated.
-Firebase ID tokens are verified by the backend at `GET /auth/me`.
+Firebase Authentication manages account identity directly. The backend
+continues to provide weather, advisory, and yield-prediction APIs.
 
 ## Offline use
 
-The field profile and preferences are stored locally on the device. The
+Signed-in field profiles sync through Firestore and are cached locally;
+guest field profiles and preferences remain stored locally on the device. The
 Android/iOS disease scanner runs with the bundled TFLite model and does not
 need a network connection. Forecasts and advisories refresh from the backend
 when online; the most recently fetched results for the active field are cached
@@ -65,8 +85,9 @@ the Android debug manifest for local development.
 ## Settings and privacy
 
 Open Settings from the home screen to change the app language, review the
-in-app privacy policy, or sign out. Field profile and language preferences,
-along with cached forecast and advisory responses, are stored locally. On
+in-app privacy policy, or sign out. Field profiles are stored in Firestore for
+signed-in users and locally for guests; language preferences and cached
+forecast and advisory responses are stored locally. On
 Android and iOS, rice-leaf photos are analyzed on-device and are not uploaded
 by the scan flow. The privacy policy describes the current app's data flows
 and provides guidance for privacy and data-deletion requests.

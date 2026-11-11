@@ -5,25 +5,28 @@
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env            # fill in API keys, database settings, and Firebase credentials
+cp .env.example .env            # fill in API keys and database settings
 ```
 
-For local dev without MySQL, set in `.env`:
+For local development without MySQL, set in `.env`:
 ```
 DATABASE_URL=sqlite:///./palayplan.db
 ```
 
-## Firebase Authentication
+## Firebase
 
-The Flutter app signs in with Firebase Email/Password or Google and sends its
-Firebase ID token as a Bearer token to `GET /auth/me`. The backend verifies the
-token (including revocation status) with Firebase Admin SDK. Keep the Firebase
-service-account JSON on the server only, set `FIREBASE_CREDENTIALS_PATH` to its
-path, and enable Email/Password and Google under Firebase Authentication
-providers. The service-account file must not be committed.
+The Flutter app uses Firebase Email/Password or Google Authentication directly.
+Signed-in field profiles are stored in Cloud Firestore under the authenticated
+Firebase UID. The backend continues to provide weather, advisory, and yield
+prediction APIs.
 
-The existing `/auth/register` and `/auth/login` database-backed endpoints remain
-available for compatibility; the Flutter Firebase flow does not use them.
+`GET /auth/me` remains available for clients that need server-side Firebase
+ID-token verification. For that endpoint, set `FIREBASE_CREDENTIALS_PATH` to a
+Firebase Admin service-account JSON file on the server. Keep that file out of
+source control and never put it in the Flutter app.
+
+The database-backed `/auth/register` and `/auth/login` endpoints remain
+available for compatibility; the Flutter app does not use them.
 
 ## Run
 ```bash
@@ -43,8 +46,8 @@ database in the same region and use the database provider's internal connection
 URL when available. The PostgreSQL URL should start with `postgresql://`.
 
 The Blueprint generates `JWT_SECRET_KEY` and configures the service's `/health`
-check. If Firebase sign-in is enabled, add the Firebase service-account JSON as
-a secret file in the Render service and set `FIREBASE_CREDENTIALS_PATH` to its
+check. If using `GET /auth/me`, add the Firebase service-account JSON as a
+secret file in the Render service and set `FIREBASE_CREDENTIALS_PATH` to its
 mounted path. Optionally add `OPENWEATHER_API_KEY`; weather otherwise falls
 back to Open-Meteo.
 
@@ -80,9 +83,9 @@ and [PSA harvested-area table](https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/2E
 ## Endpoints
 | Method | Path                | Purpose |
 |--------|---------------------|---------|
-| POST   | /auth/register      | Create farmer account |
-| POST   | /auth/login         | Get JWT access token |
-| GET    | /auth/me            | Verify Firebase ID token and return its identity |
+| POST   | /auth/register      | Legacy farmer account creation |
+| POST   | /auth/login         | Legacy JWT token issuance |
+| GET    | /auth/me            | Optional Firebase ID-token verification |
 | GET    | /weather/forecast   | 7-day hyper-local forecast |
 | GET    | /advisory/          | Smart alerts for current crop stage |
 | POST   | /predict/yield      | ML yield estimate + climate risk |

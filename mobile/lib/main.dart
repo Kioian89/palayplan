@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'providers/language_provider.dart';
 import 'providers/field_provider.dart';
 import 'screens/splash_screen.dart';
-import 'services/api_service.dart';
 import 'services/firebase_auth_service.dart';
 import 'services/firebase_options.dart';
 
@@ -19,7 +19,6 @@ Future<void> main() async {
       await Firebase.initializeApp(options: firebaseOptions);
       authService = FirebaseAuthService(
         auth: FirebaseAuth.instance,
-        api: ApiService(),
       );
     } catch (e) {
       debugPrint('Firebase initialization error: $e');
@@ -43,7 +42,12 @@ class PalayPlanApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
-        ChangeNotifierProvider(create: (_) => FieldProvider()),
+        ChangeNotifierProvider(
+          create: (_) => FieldProvider(
+            auth: authService?.firebaseAuth,
+            firestore: authService == null ? null : FirebaseFirestore.instance,
+          ),
+        ),
       ],
       child: Consumer2<LanguageProvider, FieldProvider>(
         builder: (context, _, __, ___) {

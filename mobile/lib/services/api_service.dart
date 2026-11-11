@@ -6,15 +6,6 @@ import 'package:http/http.dart' as http;
 import '../models/weather_model.dart';
 import 'api_cache.dart';
 
-class BackendAuthException implements Exception {
-  const BackendAuthException(this.message);
-
-  final String message;
-
-  @override
-  String toString() => message;
-}
-
 /// Central place for all backend calls. Swap [baseUrl] per environment
 /// (local emulator, staging, production) via --dart-define or a config file.
 class ApiService {
@@ -33,22 +24,9 @@ class ApiService {
 
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:8000', // Android emulator loopback alias to host machine
+    defaultValue:
+        'http://10.0.2.2:8000', // Android emulator loopback alias to host machine
   );
-
-  Future<Map<String, dynamic>> verifyFirebaseToken(String idToken) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/auth/me'),
-      headers: {'Authorization': 'Bearer $idToken'},
-    );
-    if (response.statusCode != 200) {
-      throw BackendAuthException(
-        'The PalayPlan server could not verify this Firebase account '
-        '(HTTP ${response.statusCode}).',
-      );
-    }
-    return Map<String, dynamic>.from(jsonDecode(response.body));
-  }
 
   Future<WeatherForecast> getForecast({
     required String municipality,

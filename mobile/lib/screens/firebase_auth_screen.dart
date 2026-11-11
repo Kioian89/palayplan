@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import 'main_shell.dart';
 import 'privacy_policy_screen.dart';
-import '../services/api_service.dart';
 import '../services/firebase_auth_service.dart';
 
 class FirebaseAuthGate extends StatefulWidget {
@@ -147,7 +146,6 @@ class _FirebaseAuthScreenState extends State<FirebaseAuthScreen> {
 
   String _readableError(Object error) {
     if (error is StateError) return error.message;
-    if (error is BackendAuthException) return error.message;
     return 'Sign-in failed. Check your connection and account settings.';
   }
 
