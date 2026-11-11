@@ -16,17 +16,19 @@ void main() {
   });
 
   group('FieldProfile Model & Provider Logic', () {
-    test('Default FieldProfile calculates correct maturity and growth stage',
-        () {
+    test('Default FieldProfile has no preset field values', () {
       final profile = FieldProfile.defaultProfile();
 
-      expect(profile.municipality, 'Ubay');
-      expect(profile.province, 'Bohol');
-      expect(profile.daysToMaturity, 110);
-      expect(profile.currentDay, 42);
-      expect(profile.growthStageKey, 'vegetative');
-      expect(profile.daysUntilHarvest, 68);
-      expect((profile.progressPercent * 100).round(), 38);
+      expect(profile.fieldName, isEmpty);
+      expect(profile.municipality, isEmpty);
+      expect(profile.province, isEmpty);
+      expect(profile.latitude, 0);
+      expect(profile.longitude, 0);
+      expect(profile.varietyName, isEmpty);
+      expect(profile.fieldAreaHa, 0);
+      expect(profile.isConfigured, isFalse);
+      expect(profile.currentDay, 0);
+      expect(profile.progressPercent, 0);
     });
 
     test('FieldProvider updates and persists profile in SharedPreferences',
@@ -79,11 +81,10 @@ void main() {
       );
       await tester.pump();
 
-      // Location shows Ubay, Bohol by default
-      expect(find.text('Ubay, Bohol'), findsOneWidget);
+      expect(find.text('Location not set'), findsOneWidget);
 
       // Tap on the location text to open the EditFieldSheet
-      await tester.tap(find.text('Ubay, Bohol'));
+      await tester.tap(find.text('Location not set'));
       await tester.pumpAndSettle();
 
       // Verify sheet opened
@@ -91,15 +92,25 @@ void main() {
       expect(find.text('My Field Profile'), findsOneWidget);
       expect(find.text('Save Field Profile'), findsOneWidget);
       expect(find.text('Choose exact location on map'), findsOneWidget);
+      expect(find.byType(TextField), findsNWidgets(3));
+      for (final finder in [
+        find.byType(TextField).first,
+        find.byType(TextField).at(1),
+        find.byType(TextField).at(2),
+      ]) {
+        expect(tester.widget<TextField>(finder).controller!.text, isEmpty);
+      }
+      expect(find.text('Choose a rice variety'), findsOneWidget);
+      expect(find.text('Select planting date'), findsOneWidget);
 
-      // Ensure save button is visible and tap Save
+      // Saving an untouched first-run form must not create demo field data.
       await tester.ensureVisible(find.text('Save Field Profile'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Save Field Profile'));
       await tester.pumpAndSettle();
 
-      // Sheet should be dismissed
-      expect(find.byType(EditFieldSheet), findsNothing);
+      expect(find.byType(EditFieldSheet), findsOneWidget);
+      expect(fieldProvider.field.isConfigured, isFalse);
     });
   });
 }

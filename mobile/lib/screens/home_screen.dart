@@ -44,6 +44,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadAdvisories() async {
     final field = FieldProvider.fieldOf(context);
+    if (!field.isConfigured) {
+      if (mounted) {
+        setState(() {
+          _todayAdvisories = [];
+          _usingCachedData = false;
+          _dataSavedAt = null;
+          _loading = false;
+        });
+      }
+      return;
+    }
+
     try {
       final advisories = await _api.getAdvisories(
         municipality: field.municipality,
@@ -63,6 +75,11 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _editField() async {
+    await EditFieldSheet.show(context);
+    await _loadAdvisories();
   }
 
   @override
@@ -114,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Logo & Field Location Selector
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => EditFieldSheet.show(context),
+                          onTap: _editField,
                           child: Row(
                             children: [
                               Container(
@@ -124,7 +141,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   borderRadius: BorderRadius.circular(12),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.08),
+                                      color:
+                                          Colors.black.withValues(alpha: 0.08),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -298,25 +316,54 @@ class _HomeScreenState extends State<HomeScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                  child: CropArcGauge(
-                    currentDay: field.currentDay,
-                    totalDays: field.daysToMaturity,
-                    stageName: '${field.stageName(context)} · $todayStr',
-                    percent: field.progressPercent,
-                  ),
-                ),
-              ),
-
-              // ── Smart Field Recommendation Card ──────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                  child: SmartRecommendationCard(
-                    recommendation: RecommendationService.generate(
-                      profile: field,
-                      lang: s.lang,
-                    ),
-                  ),
+                  child: field.isConfigured
+                      ? Column(
+                          children: [
+                            CropArcGauge(
+                              currentDay: field.currentDay,
+                              totalDays: field.daysToMaturity,
+                              stageName:
+                                  '${field.stageName(context)} · $todayStr',
+                              percent: field.progressPercent,
+                            ),
+                            const SizedBox(height: 16),
+                            SmartRecommendationCard(
+                              recommendation: RecommendationService.generate(
+                                profile: field,
+                                lang: s.lang,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Set up your rice field',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF1B3B36),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Add your field location, rice variety, planting date, and area to get local weather and crop recommendations.',
+                                  style: TextStyle(height: 1.4),
+                                ),
+                                const SizedBox(height: 12),
+                                OutlinedButton.icon(
+                                  onPressed: _editField,
+                                  icon: const Icon(Icons.tune_rounded),
+                                  label: const Text('Set up field'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                 ),
               ),
 
@@ -751,7 +798,8 @@ class _HeroRiceFarmCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF2E7D32).withValues(alpha: 0.5),
+                            color:
+                                const Color(0xFF2E7D32).withValues(alpha: 0.5),
                             blurRadius: 10,
                             offset: const Offset(0, 3),
                           ),

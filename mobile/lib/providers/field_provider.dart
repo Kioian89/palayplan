@@ -15,6 +15,7 @@ class FieldProvider extends ChangeNotifier {
   static const _listPrefKey = 'farmer_fields_list';
   static const _activeIdxPrefKey = 'farmer_active_field_index';
   static const _legacyMigrationPrefKey = 'farmer_fields_migrated_to_firebase';
+  static const _legacyMigrationUserKey = 'farmer_fields_migration_firebase_uid';
 
   FieldProvider({FirebaseAuth? auth, FirebaseFirestore? firestore})
       : _auth = auth,
@@ -70,39 +71,51 @@ class FieldProvider extends ChangeNotifier {
       notifyListeners();
 
       try {
-        final snapshot = await _cloudDocument(uid).get();
+        final migrationCompleted =
+            prefs.getBool(_legacyMigrationPrefKey) == true;
+        var migrationUserId = prefs.getString(_legacyMigrationUserKey);
+        if (!migrationCompleted && migrationUserId == null) {
+          migrationUserId = uid;
+          await prefs.setString(_legacyMigrationUserKey, uid);
+        }
+
+        final snapshot = await _cloudDocument(uid).get(
+          const GetOptions(source: Source.server),
+        );
         if (generation != _loadGeneration) return;
 
         if (snapshot.exists) {
           stored = _StoredFields.fromJson(snapshot.data()!);
           _applyStored(stored);
           await _writeLocal(prefs, uid, stored);
+          if (generation != _loadGeneration) return;
           _cloudSyncError = null;
+          if (!migrationCompleted && migrationUserId == uid) {
+            await prefs.setBool(_legacyMigrationPrefKey, true);
+            if (generation != _loadGeneration) return;
+          }
         } else {
-          stored ??= await _readLegacyIfAvailable(prefs);
-          if (stored != null) {
-            _applyStored(stored);
-            await _writeLocal(prefs, uid, stored);
-            _queueCloudWrite(uid, stored);
-            if (prefs.getBool(_legacyMigrationPrefKey) != true) {
-              await prefs.setBool(_legacyMigrationPrefKey, true);
+          if (!migrationCompleted && migrationUserId == uid) {
+            final legacyFields = await _readLocal(prefs, null);
+            if (generation != _loadGeneration) return;
+            if (legacyFields != null) {
+              stored = legacyFields;
+              _applyStored(legacyFields);
+              await _writeLocal(prefs, uid, legacyFields);
+              if (generation != _loadGeneration) return;
+              _queueCloudWrite(uid, legacyFields);
             }
+            await prefs.setBool(_legacyMigrationPrefKey, true);
+            if (generation != _loadGeneration) return;
           }
         }
+        if (generation != _loadGeneration || _userId != uid) return;
         _listenForCloudChanges(uid);
       } catch (error, stackTrace) {
+        if (generation != _loadGeneration || _userId != uid) return;
         debugPrint('Could not load field profiles from Firestore: $error');
         debugPrintStack(stackTrace: stackTrace);
         _cloudSyncError = error.toString();
-        if (stored == null) {
-          stored = await _readLegacyIfAvailable(prefs);
-          if (stored != null) {
-            _applyStored(stored);
-            await _writeLocal(prefs, uid, stored);
-            _queueCloudWrite(uid, stored);
-            await prefs.setBool(_legacyMigrationPrefKey, true);
-          }
-        }
         _listenForCloudChanges(uid);
       }
 
@@ -114,13 +127,6 @@ class FieldProvider extends ChangeNotifier {
 
     _applyStored(stored ?? _StoredFields.defaults());
     notifyListeners();
-  }
-
-  Future<_StoredFields?> _readLegacyIfAvailable(
-    SharedPreferences prefs,
-  ) async {
-    if (prefs.getBool(_legacyMigrationPrefKey) == true) return null;
-    return _readLocal(prefs, null);
   }
 
   Future<_StoredFields?> _readLocal(
@@ -136,9 +142,8 @@ class FieldProvider extends ChangeNotifier {
             .map((item) => FieldProfile.fromJson(item as Map<String, dynamic>))
             .toList();
         if (fields.isNotEmpty) {
-          final index =
-              (prefs.getInt('$_activeIdxPrefKey$suffix') ?? 0)
-                  .clamp(0, fields.length - 1);
+          final index = (prefs.getInt('$_activeIdxPrefKey$suffix') ?? 0)
+              .clamp(0, fields.length - 1);
           return _StoredFields(fields, index);
         }
       } catch (error, stackTrace) {
@@ -150,8 +155,8 @@ class FieldProvider extends ChangeNotifier {
     final profileJson = prefs.getString('$_prefKey$suffix');
     if (profileJson != null) {
       try {
-        final profile =
-            FieldProfile.fromJson(jsonDecode(profileJson) as Map<String, dynamic>);
+        final profile = FieldProfile.fromJson(
+            jsonDecode(profileJson) as Map<String, dynamic>);
         return _StoredFields([profile], 0);
       } catch (error, stackTrace) {
         debugPrint('Could not read locally saved field profile: $error');
@@ -255,9 +260,10 @@ class FieldProvider extends ChangeNotifier {
   Future<void> _changeUser(String? uid) async {
     if (_userId == uid) return;
     _userId = uid;
-    _loadGeneration++;
+    final generation = ++_loadGeneration;
     _cloudSyncError = null;
     await _firestoreSubscription?.cancel();
+    if (generation != _loadGeneration) return;
     _firestoreSubscription = null;
     _fields = [FieldProfile.defaultProfile()];
     _activeFieldIndex = 0;
@@ -360,9 +366,8 @@ class _StoredFields {
     if (fields.isEmpty) {
       throw const FormatException('Firestore field profile list is empty.');
     }
-    final activeIndex =
-        ((json['activeFieldIndex'] as num?)?.toInt() ?? 0)
-            .clamp(0, fields.length - 1);
+    final activeIndex = ((json['activeFieldIndex'] as num?)?.toInt() ?? 0)
+        .clamp(0, fields.length - 1);
     return _StoredFields(fields, activeIndex);
   }
 

@@ -24,6 +24,8 @@ profiles sync in real time through Cloud Firestore under
 store and an offline cache. Existing locally saved fields are copied to the
 first Firebase account that signs in on that device when that account has no
 saved Firestore profile. New account data is stored in a per-user local cache.
+New installs start with an empty field profile; farmers must enter their field
+details before weather, advisory, calendar, or yield features can use them.
 
 1. Create a Firebase project and register the Android app
    (`com.example.palayplan`), iOS app (`com.example.palayplan`), and a web app

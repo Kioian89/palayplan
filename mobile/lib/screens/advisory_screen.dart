@@ -6,6 +6,7 @@ import '../widgets/risk_status_card.dart';
 import '../providers/field_provider.dart';
 import '../l10n/app_strings.dart';
 import '../widgets/offline_data_notice.dart';
+import '../widgets/edit_field_sheet.dart';
 
 class AdvisoryScreen extends StatefulWidget {
   const AdvisoryScreen({super.key});
@@ -21,6 +22,7 @@ class _AdvisoryScreenState extends State<AdvisoryScreen> {
   bool _usingCachedData = false;
   DateTime? _dataSavedAt;
   bool _unavailable = false;
+  bool _needsFieldSetup = false;
 
   @override
   void initState() {
@@ -30,6 +32,18 @@ class _AdvisoryScreenState extends State<AdvisoryScreen> {
 
   Future<void> _load() async {
     final field = FieldProvider.fieldOf(context);
+    if (!field.isConfigured) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _unavailable = false;
+          _needsFieldSetup = true;
+          _advisories = [];
+        });
+      }
+      return;
+    }
+
     try {
       final data = await _api.getAdvisories(
         municipality: field.municipality,
@@ -45,6 +59,7 @@ class _AdvisoryScreenState extends State<AdvisoryScreen> {
           _dataSavedAt = _api.lastResponseAt;
           _loading = false;
           _unavailable = false;
+          _needsFieldSetup = false;
         });
       }
     } catch (_) {
@@ -104,11 +119,39 @@ class _AdvisoryScreenState extends State<AdvisoryScreen> {
       ),
       body: _loading
           ? _buildLoading(cs, s)
-          : _unavailable && _advisories.isEmpty
-              ? _buildUnavailable(cs, s)
-              : _advisories.isEmpty
-                  ? _buildEmptyState(cs)
-                  : _buildList(fmt, cs),
+          : _needsFieldSetup
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.location_on_outlined,
+                            size: 48, color: Color(0xFF2E7D32)),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Set up your field to get local crop advisories.',
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            await EditFieldSheet.show(context);
+                            setState(() => _loading = true);
+                            await _load();
+                          },
+                          icon: const Icon(Icons.tune_rounded),
+                          label: const Text('Set up field'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : _unavailable && _advisories.isEmpty
+                  ? _buildUnavailable(cs, s)
+                  : _advisories.isEmpty
+                      ? _buildEmptyState(cs)
+                      : _buildList(fmt, cs),
     );
   }
 

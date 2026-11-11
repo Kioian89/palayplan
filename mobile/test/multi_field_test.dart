@@ -16,7 +16,8 @@ void main() {
       await provider.load();
       expect(provider.fieldCount, 1);
       expect(provider.activeFieldIndex, 0);
-      expect(provider.field.fieldName, 'Main Paddy');
+      expect(provider.field.fieldName, isEmpty);
+      expect(provider.field.isConfigured, isFalse);
 
       final field2 = FieldProfile(
         fieldName: 'North Parcel',
@@ -41,14 +42,14 @@ void main() {
       // Switch back to field 0
       await provider.selectField(0);
       expect(provider.activeFieldIndex, 0);
-      expect(provider.field.fieldName, 'Main Paddy');
-      expect(provider.field.municipality, 'Ubay');
+      expect(provider.field.fieldName, isEmpty);
+      expect(provider.field.municipality, isEmpty);
 
       // Delete field 1
       final deleted = await provider.deleteField(1);
       expect(deleted, isTrue);
       expect(provider.fieldCount, 1);
-      expect(provider.field.fieldName, 'Main Paddy');
+      expect(provider.field.fieldName, isEmpty);
 
       // Cannot delete the only remaining field
       final deletedLast = await provider.deleteField(0);

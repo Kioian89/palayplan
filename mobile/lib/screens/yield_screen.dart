@@ -3,6 +3,7 @@ import '../l10n/app_strings.dart';
 import '../models/field_model.dart';
 import '../providers/field_provider.dart';
 import '../services/api_service.dart';
+import '../widgets/edit_field_sheet.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Yield Estimation Screen
@@ -30,6 +31,11 @@ class _YieldScreenState extends State<YieldScreen> {
 
   Future<void> _predict() async {
     final field = FieldProvider.fieldOf(context);
+    if (!field.isConfigured) {
+      setState(() => _error = 'Set up your field before estimating yield.');
+      return;
+    }
+
     setState(() {
       _loading = true;
       _error = null;
@@ -82,6 +88,14 @@ class _YieldScreenState extends State<YieldScreen> {
           children: [
             // ── Field Summary Card ────────────────────────────────────────────
             _FieldSummaryCard(field: field),
+            if (!field.isConfigured) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => EditFieldSheet.show(context),
+                icon: const Icon(Icons.tune_rounded),
+                label: const Text('Set up field'),
+              ),
+            ],
             const SizedBox(height: 16),
 
             // ── Water / Ecosystem Source Selector ─────────────────────────────
@@ -98,7 +112,7 @@ class _YieldScreenState extends State<YieldScreen> {
               width: double.infinity,
               height: 52,
               child: ElevatedButton.icon(
-                onPressed: _loading ? null : _predict,
+                onPressed: _loading || !field.isConfigured ? null : _predict,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2E7D32),
                   foregroundColor: Colors.white,
@@ -158,10 +172,12 @@ class _FieldSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
-    final daysSincePlanting = DateTime.now()
-        .difference(field.plantingDate)
-        .inDays
-        .clamp(0, field.daysToMaturity);
+    final daysSincePlanting = field.isConfigured
+        ? DateTime.now()
+            .difference(field.plantingDate)
+            .inDays
+            .clamp(0, field.daysToMaturity)
+        : 0;
     final harvestIn = (field.daysToMaturity - daysSincePlanting)
         .clamp(0, field.daysToMaturity);
 
@@ -203,7 +219,7 @@ class _FieldSummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            field.varietyName,
+            field.isConfigured ? field.varietyName : 'Field details not set',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 20,
@@ -221,17 +237,23 @@ class _FieldSummaryCard extends StatelessWidget {
             children: [
               _SummaryPill(
                 icon: Icons.straighten_rounded,
-                label: '${field.fieldAreaHa} ha',
+                label: field.isConfigured
+                    ? '${field.fieldAreaHa} ha'
+                    : 'Area not set',
               ),
               const SizedBox(width: 8),
               _SummaryPill(
                 icon: Icons.schedule_rounded,
-                label: 'Day $daysSincePlanting / ${field.daysToMaturity}',
+                label: field.isConfigured
+                    ? 'Day $daysSincePlanting / ${field.daysToMaturity}'
+                    : 'Planting not set',
               ),
               const SizedBox(width: 8),
               _SummaryPill(
                 icon: Icons.cut_rounded,
-                label: 'Harvest in ${harvestIn}d',
+                label: field.isConfigured
+                    ? 'Harvest in ${harvestIn}d'
+                    : 'Harvest not set',
               ),
             ],
           ),
@@ -754,7 +776,8 @@ class _EcosystemSelectorCard extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Icon(Icons.water_drop_outlined, size: 16, color: Color(0xFF2E7D32)),
+              Icon(Icons.water_drop_outlined,
+                  size: 16, color: Color(0xFF2E7D32)),
               SizedBox(width: 6),
               Text(
                 'Water / Ecosystem Type',

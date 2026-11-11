@@ -405,47 +405,67 @@ class FieldProfile {
   final double fieldAreaHa;
 
   const FieldProfile({
-    this.fieldName = 'Main Paddy',
-    this.municipality = 'Ubay',
-    this.province = 'Bohol',
-    this.latitude = 10.3157,
-    this.longitude = 123.8854,
+    this.fieldName = '',
+    this.municipality = '',
+    this.province = '',
+    this.latitude = 0,
+    this.longitude = 0,
     this.hasCustomCoordinates = false,
     required this.plantingDate,
-    this.varietyName = 'NSIC Rc 222 (Tubigan 21)',
-    this.daysToMaturity = 110,
-    this.fieldAreaHa = 1.0,
+    this.varietyName = '',
+    this.daysToMaturity = 0,
+    this.fieldAreaHa = 0,
   });
 
-  /// Default profile initialized to day 42 of 110 (Active Vegetative).
+  /// Empty profile used until the farmer enters their own field details.
   factory FieldProfile.defaultProfile() {
-    return FieldProfile(
-      plantingDate: DateTime.now().subtract(const Duration(days: 42)),
-    );
+    return FieldProfile(plantingDate: DateTime.now());
   }
 
-  String get locationDisplay => '$municipality, $province';
+  bool get isConfigured =>
+      fieldName.trim().isNotEmpty &&
+      municipality.trim().isNotEmpty &&
+      province.trim().isNotEmpty &&
+      latitude >= -90 &&
+      latitude <= 90 &&
+      longitude >= -180 &&
+      longitude <= 180 &&
+      (latitude != 0 || longitude != 0) &&
+      varietyName.trim().isNotEmpty &&
+      daysToMaturity > 0 &&
+      fieldAreaHa > 0;
+
+  String get locationDisplay {
+    if (municipality.isEmpty && province.isEmpty) return 'Location not set';
+    if (municipality.isEmpty) return province;
+    if (province.isEmpty) return municipality;
+    return '$municipality, $province';
+  }
 
   /// Current day in the cropping cycle (1 to daysToMaturity).
   int get currentDay {
+    if (daysToMaturity <= 0) return 0;
     final diff = DateTime.now().difference(plantingDate).inDays;
     return diff.clamp(1, daysToMaturity);
   }
 
   /// Completion percentage from 0.0 to 1.0.
-  double get progressPercent => (currentDay / daysToMaturity).clamp(0.0, 1.0);
+  double get progressPercent =>
+      daysToMaturity > 0 ? (currentDay / daysToMaturity).clamp(0.0, 1.0) : 0;
 
   /// Expected harvest date.
   DateTime get harvestDate => plantingDate.add(Duration(days: daysToMaturity));
 
   /// Days remaining until harvest.
   int get daysUntilHarvest {
+    if (daysToMaturity <= 0) return 0;
     final remaining = daysToMaturity - currentDay;
     return remaining.clamp(0, daysToMaturity);
   }
 
   /// Categorical growth stage identifier.
   String get growthStageKey {
+    if (daysToMaturity <= 0) return 'unconfigured';
     if (currentDay <= 14) return 'seedbed';
     if (currentDay <= 50) return 'vegetative';
     if (currentDay <= 85) return 'reproductive';
@@ -512,19 +532,18 @@ class FieldProfile {
 
   factory FieldProfile.fromJson(Map<String, dynamic> json) {
     return FieldProfile(
-      fieldName: json['fieldName'] ?? 'Main Paddy',
-      municipality: json['municipality'] ?? 'Ubay',
-      province: json['province'] ?? 'Bohol',
-      latitude: (json['latitude'] as num?)?.toDouble() ?? 10.3157,
-      longitude: (json['longitude'] as num?)?.toDouble() ?? 123.8854,
+      fieldName: json['fieldName'] ?? '',
+      municipality: json['municipality'] ?? '',
+      province: json['province'] ?? '',
+      latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
+      longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
       hasCustomCoordinates: json['hasCustomCoordinates'] == true,
       plantingDate: json['plantingDate'] != null
-          ? DateTime.tryParse(json['plantingDate']) ??
-              DateTime.now().subtract(const Duration(days: 42))
-          : DateTime.now().subtract(const Duration(days: 42)),
-      varietyName: json['varietyName'] ?? 'NSIC Rc 222 (Tubigan 21)',
-      daysToMaturity: (json['daysToMaturity'] as num?)?.toInt() ?? 110,
-      fieldAreaHa: (json['fieldAreaHa'] as num?)?.toDouble() ?? 1.0,
+          ? DateTime.tryParse(json['plantingDate']) ?? DateTime.now()
+          : DateTime.now(),
+      varietyName: json['varietyName'] ?? '',
+      daysToMaturity: (json['daysToMaturity'] as num?)?.toInt() ?? 0,
+      fieldAreaHa: (json['fieldAreaHa'] as num?)?.toDouble() ?? 0,
     );
   }
 }

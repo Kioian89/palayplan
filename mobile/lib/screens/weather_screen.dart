@@ -31,6 +31,16 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
   Future<void> _load() async {
     final field = FieldProvider.fieldOf(context);
+    if (!field.isConfigured) {
+      if (mounted) {
+        setState(() {
+          _forecast = null;
+          _error = null;
+        });
+      }
+      return;
+    }
+
     try {
       final forecast = await _api.getForecast(
         municipality: field.locationDisplay,
@@ -78,85 +88,121 @@ class _WeatherScreenState extends State<WeatherScreen> {
           IconButton(
             icon: const Icon(Icons.satellite_alt_rounded),
             tooltip: s.zoomEarthTitle,
-            onPressed: () {
-              ZoomEarthService.launchMap(
-                ZoomEarthService.radarUrl(
-                  lat: field.latitude,
-                  lon: field.longitude,
-                ),
-              );
-            },
+            onPressed: field.isConfigured
+                ? () {
+                    ZoomEarthService.launchMap(
+                      ZoomEarthService.radarUrl(
+                        lat: field.latitude,
+                        lon: field.longitude,
+                      ),
+                    );
+                  }
+                : null,
           ),
           IconButton(
             icon: const Icon(Icons.location_on_outlined),
             tooltip: 'Change Field Location',
-            onPressed: () => EditFieldSheet.show(context),
+            onPressed: () async {
+              await EditFieldSheet.show(context);
+              await _load();
+            },
           ),
         ],
       ),
-      body: _error != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.cloud_off_rounded,
-                        size: 48, color: Colors.grey),
-                    const SizedBox(height: 12),
-                    Text(
-                      s.offlineNoCachedData,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _load,
-                      child: Text(s.offlineRetry),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          : _forecast == null
-              ? const Center(child: CircularProgressIndicator())
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  child: ListView(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
-                    children: [
-                      if (_usingCachedData && _dataSavedAt != null)
-                        OfflineDataNotice(savedAt: _dataSavedAt!),
-                      // Today Hero Banner
-                      if (_forecast!.dailyForecast.isNotEmpty)
-                        _TodayWeatherHero(day: _forecast!.dailyForecast.first),
-
-                      const SizedBox(height: 16),
-
-                      // Live Satellite & Radar (Zoom Earth)
-                      ZoomEarthCard(field: field),
-
-                      const SizedBox(height: 18),
-                      Padding(
+      body: !field.isConfigured
+          ? _buildSetupPrompt(context)
+          : _error != null
+              ? _buildErrorState(s)
+              : _forecast == null
+                  ? const Center(child: CircularProgressIndicator())
+                  : RefreshIndicator(
+                      onRefresh: _load,
+                      child: ListView(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 4, vertical: 4),
-                        child: Text(
-                          'Upcoming 7 Days',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF1B3B36),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
+                            horizontal: 16, vertical: 10),
+                        children: [
+                          if (_usingCachedData && _dataSavedAt != null)
+                            OfflineDataNotice(savedAt: _dataSavedAt!),
+                          // Today Hero Banner
+                          if (_forecast!.dailyForecast.isNotEmpty)
+                            _TodayWeatherHero(
+                                day: _forecast!.dailyForecast.first),
 
-                      // Daily Forecast Cards
-                      ..._forecast!.dailyForecast
-                          .map((day) => _DailyWeatherCard(day: day)),
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                ),
+                          const SizedBox(height: 16),
+
+                          // Live Satellite & Radar (Zoom Earth)
+                          ZoomEarthCard(field: field),
+
+                          const SizedBox(height: 18),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 4),
+                            child: Text(
+                              'Upcoming 7 Days',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF1B3B36),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+
+                          // Daily Forecast Cards
+                          ..._forecast!.dailyForecast
+                              .map((day) => _DailyWeatherCard(day: day)),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
+    );
+  }
+
+  Widget _buildSetupPrompt(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.location_on_outlined,
+                size: 48, color: Color(0xFF2E7D32)),
+            const SizedBox(height: 12),
+            const Text(
+              'Set up your field to see local weather.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () async {
+                await EditFieldSheet.show(context);
+                await _load();
+              },
+              child: const Text('Set up field'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(AppStrings s) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off_rounded, size: 48, color: Colors.grey),
+            const SizedBox(height: 12),
+            Text(s.offlineNoCachedData, textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _load,
+              child: Text(s.offlineRetry),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -188,7 +234,9 @@ class _TodayWeatherHero extends StatelessWidget {
     final rain = day.rainProbabilityPct;
     final wind = day.windSpeedKph;
     if (rain >= 80) return Icons.thunderstorm_rounded;
-    if (rain >= 60) return wind >= 40 ? Icons.storm_rounded : Icons.umbrella_rounded;
+    if (rain >= 60) {
+      return wind >= 40 ? Icons.storm_rounded : Icons.umbrella_rounded;
+    }
     if (rain >= 40) return Icons.wb_cloudy_rounded;
     if (wind >= 40) return Icons.air_rounded;
     return Icons.wb_sunny_rounded;
@@ -247,7 +295,8 @@ class _TodayWeatherHero extends StatelessWidget {
                 color:
                     isRainy ? const Color(0xFF81D4FA) : const Color(0xFFFFD54F),
                 size: 32,
-              ),            ],
+              ),
+            ],
           ),
           const SizedBox(height: 10),
           // ── Weather Description Label ──────────────────────────────────────
