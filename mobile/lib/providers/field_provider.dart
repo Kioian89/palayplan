@@ -1,14 +1,12 @@
 import 'dart:async';
-import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/field_model.dart';
-
 /// Provider for managing the farmer's active rice fields and multi-field profiles.
 class FieldProvider extends ChangeNotifier {
   static const _prefKey = 'farmer_field_profile';
