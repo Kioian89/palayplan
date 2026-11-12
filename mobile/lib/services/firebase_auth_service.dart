@@ -4,6 +4,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_options.dart';
 
 class FirebaseAuthService {
+  // Preserve the public `auth:` named argument while storing it privately.
+  // ignore: prefer_initializing_formals
   FirebaseAuthService({required FirebaseAuth auth})
     : _auth = auth,
       _googleSignIn = GoogleSignIn(

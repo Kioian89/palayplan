@@ -17,6 +17,8 @@ class FieldProvider extends ChangeNotifier {
   static const _legacyMigrationPrefKey = 'farmer_fields_migrated_to_firebase';
   static const _legacyMigrationUserKey = 'farmer_fields_migration_firebase_uid';
 
+  // Keep the public named parameters stable while storing them privately.
+  // ignore: prefer_initializing_formals
   FieldProvider({FirebaseAuth? auth, FirebaseFirestore? firestore})
       : _auth = auth,
         _firestore = firestore,
