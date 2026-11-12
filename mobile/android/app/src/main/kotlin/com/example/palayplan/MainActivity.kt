@@ -1,4 +1,4 @@
-package com.example.palayplan
+package com.ci.palayplan
 
 import io.flutter.embedding.android.FlutterActivity
 

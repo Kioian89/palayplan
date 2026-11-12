@@ -46,8 +46,10 @@ details before weather, advisory, calendar, or yield features can use them.
    steps in Firebase Console first.
 
 3. Copy `firebase.env.example.json` to the ignored `firebase.env.json`, then
-   replace its values with each app's Firebase API key/app ID and the project's
-   sender ID and project ID. Run with:
+   replace its placeholder values with each app's Firebase API key/app ID and
+   the project's sender ID and project ID. Do not commit the populated file.
+   Restrict each Firebase API key to the intended app and required APIs. Run
+   with:
 
    ```bash
    flutter run --dart-define-from-file=firebase.env.json \
@@ -122,6 +124,7 @@ pushes to `main`/`master`, pull requests, and version tags; a manual run is also
 available from the Actions tab. Download the APK from the completed workflow
 run's **Artifacts** section. Version-tag builds also attach the APK to the
 corresponding GitHub Release.
-The workflow uses the Android Firebase options configured in
-`lib/services/firebase_options.dart`; no repository Actions secrets are
-required for the current Android configuration.
+Configure the restricted Android Firebase API key as the repository Actions
+secret `FIREBASE_API_KEY_ANDROID`; the workflow passes it to Android builds
+without storing it in source. Pull-request builds can run without this secret,
+but Firebase-backed sign-in and sync will not be configured in those builds.

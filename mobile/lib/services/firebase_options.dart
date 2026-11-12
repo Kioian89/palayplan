@@ -4,19 +4,18 @@ import 'package:flutter/foundation.dart';
 class FirebaseClientOptions {
   static const _projectId = String.fromEnvironment(
     'FIREBASE_PROJECT_ID',
-    defaultValue: 'palay-plan',
+    defaultValue: 'palay-plan-33b1a',
   );
   static const _senderId = String.fromEnvironment(
     'FIREBASE_MESSAGING_SENDER_ID',
-    defaultValue: '1057325937104',
+    defaultValue: '114055608372',
   );
   static const _androidApiKey = String.fromEnvironment(
     'FIREBASE_API_KEY_ANDROID',
-    defaultValue: 'AIzaSyAfuT-RUmzDt4FhAMtLTNadUysXO1s9gqM',
   );
   static const _androidAppId = String.fromEnvironment(
     'FIREBASE_APP_ID_ANDROID',
-    defaultValue: '1:1057325937104:android:2fbdf7819e124042a109d5',
+    defaultValue: '1:114055608372:android:0a727e35dc93112f53f261',
   );
   static const _iosApiKey = String.fromEnvironment('FIREBASE_API_KEY_IOS');
   static const _iosAppId = String.fromEnvironment('FIREBASE_APP_ID_IOS');

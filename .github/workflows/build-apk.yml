@@ -24,6 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       API_BASE_URL: ${{ vars.API_BASE_URL }}
+      FIREBASE_API_KEY_ANDROID: ${{ secrets.FIREBASE_API_KEY_ANDROID }}
     permissions:
       contents: write
     defaults:
@@ -75,6 +76,14 @@ jobs:
             exit 1
           fi
 
+      - name: Validate Firebase API key
+        if: github.event_name != 'pull_request'
+        run: |
+          if [ -z "$FIREBASE_API_KEY_ANDROID" ]; then
+            echo "Set the repository Actions secret FIREBASE_API_KEY_ANDROID to the restricted Android Firebase API key."
+            exit 1
+          fi
+
       - name: Publish Shorebird OTA Patch
         if: "${{ github.event.inputs.build_type == 'patch' }}"
         env:
@@ -83,6 +92,7 @@ jobs:
           shorebird patch android \
             --allow-asset-diffs \
             --allow-native-diffs \
+            --dart-define="FIREBASE_API_KEY_ANDROID=$FIREBASE_API_KEY_ANDROID" \
             --dart-define="API_BASE_URL=$API_BASE_URL"
 
       - name: Build APK (Release / Shorebird)
@@ -93,10 +103,12 @@ jobs:
           if [ -n "$SHOREBIRD_TOKEN" ] && ([ "${{ startsWith(github.ref, 'refs/tags/v') }}" = "true" ] || [ "${{ github.event.inputs.build_type }}" = "release" ]); then
             echo "Building with Shorebird release..."
             shorebird release android --artifact apk \
+              --dart-define="FIREBASE_API_KEY_ANDROID=$FIREBASE_API_KEY_ANDROID" \
               --dart-define="API_BASE_URL=$API_BASE_URL"
           else
             echo "Building standard release APK..."
             flutter build apk --release \
+              --dart-define="FIREBASE_API_KEY_ANDROID=$FIREBASE_API_KEY_ANDROID" \
               --dart-define="API_BASE_URL=$API_BASE_URL"
           fi
 
@@ -104,6 +116,7 @@ jobs:
         if: "${{ github.event.inputs.build_type == 'debug' }}"
         run: |
           flutter build apk --debug \
+            --dart-define="FIREBASE_API_KEY_ANDROID=$FIREBASE_API_KEY_ANDROID" \
             --dart-define="API_BASE_URL=$API_BASE_URL"
 
       - name: Upload APK Artifact

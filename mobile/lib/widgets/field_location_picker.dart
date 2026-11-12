@@ -167,7 +167,7 @@ class _FieldLocationPickerState extends State<FieldLocationPicker> {
                   TileLayer(
                     urlTemplate:
                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.example.palayplan',
+                    userAgentPackageName: 'com.ci.palayplan',
                   ),
                   MarkerLayer(
                     markers: [
