@@ -181,23 +181,6 @@ class _ScanScreenState extends State<ScanScreen> {
                           width: double.infinity,
                         )
                       else ...[
-                        Image.asset(
-                          'assets/images/rice_field_scanner_banner.png',
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.black.withValues(alpha: 0.12),
-                                Colors.black.withValues(alpha: 0.58),
-                              ],
-                            ),
-                          ),
-                        ),
                         Center(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -206,17 +189,17 @@ class _ScanScreenState extends State<ScanScreen> {
                                 width: 88,
                                 height: 88,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.18),
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.08),
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.7),
+                                    color: theme.colorScheme.primary.withValues(alpha: 0.35),
                                     width: 1.5,
                                   ),
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.add_a_photo_outlined,
                                   size: 40,
-                                  color: Colors.white,
+                                  color: theme.colorScheme.primary,
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -225,7 +208,7 @@ class _ScanScreenState extends State<ScanScreen> {
                                 style: const TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                  color: const Color(0xFF2C4A45),
                                 ),
                               ),
                               const SizedBox(height: 6),
@@ -233,7 +216,7 @@ class _ScanScreenState extends State<ScanScreen> {
                                 s.scanUploadPrompt,
                                 style: TextStyle(
                                   fontSize: 13.5,
-                                  color: Colors.white.withValues(alpha: 0.9),
+                                  color: const Color(0xFF5A716A),
                                 ),
                                 textAlign: TextAlign.center,
                               ),
