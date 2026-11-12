@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../l10n/app_strings.dart';
 import '../services/firebase_auth_service.dart';
 import '../widgets/language_picker_sheet.dart';
