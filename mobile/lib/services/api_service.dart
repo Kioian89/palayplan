@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+
 import '../models/weather_model.dart';
 import 'api_cache.dart';
 
@@ -11,7 +13,8 @@ import 'api_cache.dart';
 class ApiService {
   ApiService({http.Client? client}) : _client = client ?? http.Client();
 
-  static const _requestTimeout = Duration(seconds: 12);
+  static const _requestTimeout = Duration(seconds: 30);
+  static const _maxRequestAttempts = 2;
 
   final http.Client _client;
   bool _lastResponseWasCached = false;
@@ -32,15 +35,16 @@ class ApiService {
     required double lat,
     required double lon,
   }) async {
-    final uri =
-        Uri.parse('$baseUrl/weather/forecast').replace(queryParameters: {
-      'municipality': municipality,
-      'lat': lat.toString(),
-      'lon': lon.toString(),
-    });
+    final uri = Uri.parse('$baseUrl/weather/forecast').replace(
+      queryParameters: {
+        'municipality': municipality,
+        'lat': lat.toString(),
+        'lon': lon.toString(),
+      },
+    );
     final cacheKey = _cacheKey('forecast', [municipality, lat, lon]);
     try {
-      final response = await _client.get(uri).timeout(_requestTimeout);
+      final response = await _sendWithRetry(() => _client.get(uri));
       if (response.statusCode != 200) {
         throw _ApiRequestException(
           'Failed to load forecast: HTTP ${response.statusCode}',
@@ -67,13 +71,15 @@ class ApiService {
     required DateTime startDate,
     required int daysToMaturity,
   }) async {
-    final uri = Uri.parse('$baseUrl/advisory/').replace(queryParameters: {
-      'municipality': municipality,
-      'lat': lat.toString(),
-      'lon': lon.toString(),
-      'start_date': startDate.toIso8601String().split('T').first,
-      'days_to_maturity': daysToMaturity.toString(),
-    });
+    final uri = Uri.parse('$baseUrl/advisory/').replace(
+      queryParameters: {
+        'municipality': municipality,
+        'lat': lat.toString(),
+        'lon': lon.toString(),
+        'start_date': startDate.toIso8601String().split('T').first,
+        'days_to_maturity': daysToMaturity.toString(),
+      },
+    );
     final cacheKey = _cacheKey('advisories', [
       municipality,
       lat,
@@ -82,7 +88,7 @@ class ApiService {
       daysToMaturity,
     ]);
     try {
-      final response = await _client.get(uri).timeout(_requestTimeout);
+      final response = await _sendWithRetry(() => _client.get(uri));
       if (response.statusCode != 200) {
         throw _ApiRequestException(
           'Failed to load advisories: HTTP ${response.statusCode}',
@@ -117,10 +123,9 @@ class ApiService {
     String? soilType,
     String? ecosystemType,
   }) async {
-    final uri = Uri.parse('$baseUrl/predict/yield').replace(queryParameters: {
-      'lat': lat.toString(),
-      'lon': lon.toString(),
-    });
+    final uri = Uri.parse(
+      '$baseUrl/predict/yield',
+    ).replace(queryParameters: {'lat': lat.toString(), 'lon': lon.toString()});
     final payload = <String, dynamic>{
       'seed_variety': seedVariety,
       'days_to_maturity': daysToMaturity,
@@ -132,13 +137,13 @@ class ApiService {
     if (ecosystemType != null && ecosystemType.isNotEmpty) {
       payload['ecosystem_type'] = ecosystemType;
     }
-    final response = await _client
-        .post(
-          uri,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(payload),
-        )
-        .timeout(_requestTimeout);
+    final response = await _sendWithRetry(
+      () => _client.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      ),
+    );
     if (response.statusCode != 200) {
       throw Exception('Prediction failed: ${response.body}');
     }
@@ -147,6 +152,27 @@ class ApiService {
 
   String _cacheKey(String category, List<Object> dimensions) =>
       '${category}_${Uri.encodeComponent(dimensions.join('|'))}';
+
+  Future<http.Response> _sendWithRetry(
+    Future<http.Response> Function() send,
+  ) async {
+    for (var attempt = 0; attempt < _maxRequestAttempts; attempt++) {
+      try {
+        return await send().timeout(_requestTimeout);
+      } catch (error) {
+        final isTransportFailure =
+            error is http.ClientException ||
+            error is SocketException ||
+            error is TimeoutException;
+        if (!isTransportFailure || attempt + 1 == _maxRequestAttempts) {
+          rethrow;
+        }
+        await Future<void>.delayed(Duration(seconds: attempt + 1));
+      }
+    }
+
+    throw StateError('Request retry loop ended unexpectedly.');
+  }
 
   bool _isRecoverable(Object error) =>
       error is http.ClientException ||

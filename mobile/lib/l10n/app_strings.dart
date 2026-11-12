@@ -45,9 +45,9 @@ class AppStrings {
         'Na-save para magamit offline · Na-update $date',
       );
   String get offlineNoCachedData => _pick(
-        'No saved advisories yet. Connect to the internet to load them.',
-        'Wala pang naka-save na abiso. Kumonekta sa internet para makuha ang mga ito.',
-        'Wala pay na-save nga tambag. Sumpayi ang internet aron makuha kini.',
+        'No saved data yet. PalayPlan’s data service may be temporarily unavailable, even if your internet is working. Try again shortly.',
+        'Wala pang naka-save na data. Maaaring pansamantalang hindi available ang data service ng PalayPlan kahit gumagana ang internet mo. Subukan ulit mamaya.',
+        'Wala pay na-save nga datos. Posibleng temporaryong dili magamit ang data service sa PalayPlan bisan og nagagana ang imong internet. Sulayi pag-usab unya.',
       );
   String get offlineRetry =>
       _pick('Try again', 'Subukan muli', 'Sulayi pag-usab');
@@ -138,6 +138,10 @@ class AppStrings {
       'Pilia sa camera o pag-upload sa gallery');
   String get scanAnalyzing =>
       _pick('Analyzing leaf…', 'Sinusuri ang dahon…', 'Gisusi ang dahon…');
+  String get scanLoadingModel => _pick(
+      'Loading scan model…',
+      'Nilo-load ang modelo ng pag-scan…',
+      'Gina-load ang modelo sa pag-scan…');
 
   // ── Result Screen ──────────────────────────────────────────────────────────
   String get resultTitle =>

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
@@ -19,18 +20,13 @@ class _ScanScreenState extends State<ScanScreen> {
 
   Uint8List? _imageBytes;
   bool _isProcessing = false;
+  bool _isModelLoading = true;
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _classifier.initialize().catchError((error) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'Could not load detection model: $error';
-        });
-      }
-    });
+    unawaited(_loadModel());
   }
 
   @override
@@ -39,12 +35,44 @@ class _ScanScreenState extends State<ScanScreen> {
     super.dispose();
   }
 
+  Future<void> _loadModel() async {
+    if (mounted) {
+      setState(() {
+        _isModelLoading = true;
+        _errorMessage = null;
+      });
+    }
+
+    try {
+      await _classifier.initialize();
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Could not load detection model: $error';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isModelLoading = false;
+        });
+      }
+    }
+  }
+
   Future<void> _pickImage(ImageSource source) async {
+    if (_isProcessing || _isModelLoading) return;
+
     setState(() {
       _errorMessage = null;
     });
 
     try {
+      if (!_classifier.isInitialized) {
+        await _loadModel();
+        if (!mounted || !_classifier.isInitialized) return;
+      }
+
       final pickedFile = await _picker.pickImage(
         source: source,
         maxWidth: 1024,
@@ -55,6 +83,7 @@ class _ScanScreenState extends State<ScanScreen> {
       if (pickedFile == null) return;
 
       final bytes = await pickedFile.readAsBytes();
+      if (!mounted) return;
       setState(() {
         _imageBytes = bytes;
       });
@@ -248,7 +277,7 @@ class _ScanScreenState extends State<ScanScreen> {
                       ),
 
                       // Loading Overlay
-                      if (_isProcessing)
+                      if (_isProcessing || _isModelLoading)
                         Container(
                           color: Colors.white.withValues(alpha: 0.88),
                           child: Center(
@@ -265,7 +294,9 @@ class _ScanScreenState extends State<ScanScreen> {
                                 ),
                                 const SizedBox(height: 20),
                                 Text(
-                                  s.scanAnalyzing,
+                                  _isModelLoading
+                                      ? s.scanLoadingModel
+                                      : s.scanAnalyzing,
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w700,
@@ -313,7 +344,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: _isProcessing
+                      onPressed: _isProcessing || _isModelLoading
                           ? null
                           : () => _pickImage(ImageSource.camera),
                       icon: const Icon(Icons.camera_alt_rounded, size: 22),
@@ -329,7 +360,7 @@ class _ScanScreenState extends State<ScanScreen> {
                   const SizedBox(width: 14),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: _isProcessing
+                      onPressed: _isProcessing || _isModelLoading
                           ? null
                           : () => _pickImage(ImageSource.gallery),
                       icon: const Icon(Icons.photo_library_rounded, size: 22),
