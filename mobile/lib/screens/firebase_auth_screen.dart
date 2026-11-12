@@ -1,7 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
 
 import '../l10n/app_strings.dart';
+import '../providers/field_provider.dart';
+import 'farmer_landing_screen.dart';
 import 'main_shell.dart';
 import 'privacy_policy_screen.dart';
 import '../services/firebase_auth_service.dart';
@@ -17,19 +20,21 @@ class FirebaseAuthGate extends StatefulWidget {
 
 class _FirebaseAuthGateState extends State<FirebaseAuthGate> {
   bool _continueAsGuest = false;
+  String? _continuedUserId;
 
   @override
   Widget build(BuildContext context) {
+    final fieldProvider = context.watch<FieldProvider>();
     return StreamBuilder<User?>(
       stream: widget.service.authStateChanges,
       initialData: widget.service.currentUser,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting &&
             snapshot.data == null) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(color: Color(0xFFFF7E55)),
-            ),
+          return const FarmerLandingScreen(
+            isProfileReady: false,
+            loadingMessage: 'Checking your sign-in status…',
+            onContinue: _ignoreLandingContinue,
           );
         }
         if (snapshot.data == null) {
@@ -41,11 +46,27 @@ class _FirebaseAuthGateState extends State<FirebaseAuthGate> {
             },
           );
         }
-        return MainShell(authService: widget.service);
+        final user = snapshot.data!;
+        final profileReady = fieldProvider.isLoadedForUser(user.uid);
+        if (!profileReady || _continuedUserId != user.uid) {
+          return FarmerLandingScreen(
+            isProfileReady: profileReady,
+            loadingMessage: 'Preparing your account and farm profile…',
+            onContinue: () {
+              setState(() => _continuedUserId = user.uid);
+            },
+          );
+        }
+        return MainShell(
+          key: ValueKey(user.uid),
+          authService: widget.service,
+        );
       },
     );
   }
 }
+
+void _ignoreLandingContinue() {}
 
 class FirebaseAuthScreen extends StatefulWidget {
   const FirebaseAuthScreen({
@@ -63,6 +84,7 @@ class FirebaseAuthScreen extends StatefulWidget {
 
 class _FirebaseAuthScreenState extends State<FirebaseAuthScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _emailFieldKey = GlobalKey<FormFieldState<String>>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -70,6 +92,7 @@ class _FirebaseAuthScreenState extends State<FirebaseAuthScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
+  String? _statusMessage;
 
   @override
   void dispose() {
@@ -85,6 +108,7 @@ class _FirebaseAuthScreenState extends State<FirebaseAuthScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _statusMessage = null;
     });
 
     try {
@@ -110,10 +134,43 @@ class _FirebaseAuthScreenState extends State<FirebaseAuthScreen> {
     }
   }
 
+  Future<void> _sendPasswordResetEmail() async {
+    if (!(_emailFieldKey.currentState?.validate() ?? false)) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _statusMessage = null;
+    });
+
+    try {
+      await widget.service.sendPasswordResetEmail(email: _emailController.text);
+      if (mounted) {
+        setState(() {
+          _statusMessage =
+              'If an account exists for this email, password reset instructions will be sent.';
+        });
+      }
+    } on FirebaseAuthException catch (error) {
+      if (mounted) {
+        setState(
+          () => _errorMessage = _firebaseError(error, passwordReset: true),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _errorMessage = _readableError(error));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _signInWithGoogle() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _statusMessage = null;
     });
     try {
       await widget.service.signInWithGoogle();
@@ -128,7 +185,21 @@ class _FirebaseAuthScreenState extends State<FirebaseAuthScreen> {
     }
   }
 
-  String _firebaseError(FirebaseAuthException error) {
+  String _firebaseError(
+    FirebaseAuthException error, {
+    bool passwordReset = false,
+  }) {
+    if (passwordReset) {
+      return switch (error.code) {
+        'invalid-email' => 'Enter a valid email address.',
+        'network-request-failed' =>
+          'Could not connect. Check your internet connection and try again.',
+        'too-many-requests' =>
+          'Too many attempts. Please wait a while and try again.',
+        _ => 'Could not send reset instructions. Please try again.',
+      };
+    }
+
     return switch (error.code) {
       'email-already-in-use' => 'An account already exists for this email.',
       'invalid-email' => 'Enter a valid email address.',
@@ -140,13 +211,15 @@ class _FirebaseAuthScreenState extends State<FirebaseAuthScreen> {
       'weak-password' => 'Choose a password with at least 6 characters.',
       'network-request-failed' =>
         'Could not connect. Check your internet connection and try again.',
+      'too-many-requests' =>
+        'Too many attempts. Please wait a while and try again.',
       _ => 'Authentication failed. Please try again.',
     };
   }
 
   String _readableError(Object error) {
     if (error is StateError) return error.message;
-    return 'Sign-in failed. Check your connection and account settings.';
+    return 'Authentication request failed. Check your connection and try again.';
   }
 
   @override
@@ -197,6 +270,7 @@ class _FirebaseAuthScreenState extends State<FirebaseAuthScreen> {
                     ),
                     const SizedBox(height: 28),
                     TextFormField(
+                      key: _emailFieldKey,
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
@@ -214,6 +288,16 @@ class _FirebaseAuthScreenState extends State<FirebaseAuthScreen> {
                         return null;
                       },
                     ),
+                    if (!_isCreatingAccount) ...[
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed:
+                              _isLoading ? null : _sendPasswordResetEmail,
+                          child: const Text('Forgot password?'),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _passwordController,
@@ -271,6 +355,19 @@ class _FirebaseAuthScreenState extends State<FirebaseAuthScreen> {
                         },
                       ),
                     ],
+                    if (_statusMessage != null) ...[
+                      const SizedBox(height: 16),
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          _statusMessage!,
+                          style: const TextStyle(
+                            color: Color(0xFF2E7D32),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
                     if (_errorMessage != null) ...[
                       const SizedBox(height: 16),
                       Semantics(
@@ -318,6 +415,7 @@ class _FirebaseAuthScreenState extends State<FirebaseAuthScreen> {
                           : () => setState(() {
                                 _isCreatingAccount = !_isCreatingAccount;
                                 _errorMessage = null;
+                                _statusMessage = null;
                               }),
                       child: Text(
                         _isCreatingAccount

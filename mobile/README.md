@@ -117,8 +117,8 @@ To publish an update, increment `version` in `pubspec.yaml`, build with
 matches that version (for example, `v0.1.1`).
 
 The GitHub Actions workflow at `.github/workflows/build-apk.yml` builds APKs
-with the URL configured in the repository's `API_BASE_URL` variable. Set it to
-the Cloud Run service URL before running the workflow; see `backend/README.md`.
+using the PalayPlan Render API by default. To use another deployment, set the
+repository's `API_BASE_URL` variable to its base URL.
 The workflow runs on
 pushes to `main`/`master`, pull requests, and version tags; a manual run is also
 available from the Actions tab. Download the APK from the completed workflow

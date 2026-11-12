@@ -77,9 +77,9 @@ models and queries.
    commit that file.
 6. After deployment, get the service URL with
    `gcloud run services describe palayplan-api --region asia-southeast1 --format='value(status.url)'`
-   and verify `<SERVICE_URL>/health`. Set the GitHub Actions repository
-   variable `API_BASE_URL` to that service URL before running the mobile build
-   workflow. The workflow fails validation if this variable is missing.
+   and verify `<SERVICE_URL>/health`. To use this service in mobile builds,
+   set the GitHub Actions repository variable `API_BASE_URL` to its URL. If
+   unset, mobile builds use the deployed Render API URL by default.
 
 The Cloud Run service is public so the mobile client can call it; protect
 account-specific routes with the existing Firebase ID-token verification.

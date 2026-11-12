@@ -128,6 +128,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
                             _TodayWeatherHero(
                                 day: _forecast!.dailyForecast.first),
 
+                          if (_forecast!.dailyForecast.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            _HeatOutlookCard(days: _forecast!.dailyForecast),
+                          ],
+
                           const SizedBox(height: 16),
 
                           // Live Satellite & Radar (Zoom Earth)
@@ -422,6 +427,134 @@ class _HeroStat extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 fontSize: 14)),
       ],
+    );
+  }
+}
+
+class _HeatOutlookCard extends StatelessWidget {
+  const _HeatOutlookCard({required this.days});
+
+  final List<DailyForecast> days;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final warmDays = days.where((day) => day.temperatureC >= 32).toList();
+    final hotDays = days.where((day) => day.temperatureC >= 35).toList();
+    final hottestDay = days.reduce(
+      (hottest, day) =>
+          day.temperatureC > hottest.temperatureC ? day : hottest,
+    );
+    final hasHotWeather = hotDays.isNotEmpty;
+    final hasWarmWeather = warmDays.isNotEmpty;
+    final accent = hasHotWeather
+        ? const Color(0xFFB3261E)
+        : hasWarmWeather
+            ? const Color(0xFF9A4D00)
+            : const Color(0xFF2E7D32);
+    final heading = hasHotWeather
+        ? 'Hot weather expected'
+        : hasWarmWeather
+            ? 'Warm weather outlook'
+            : 'No hot days flagged';
+    final details = hasHotWeather
+        ? '${hotDays.length} forecast ${hotDays.length == 1 ? 'day' : 'days'} at 35°C or above.'
+        : hasWarmWeather
+            ? '${warmDays.length} forecast ${warmDays.length == 1 ? 'day' : 'days'} at 32°C or above.'
+            : 'Forecast temperatures stay below 32°C.';
+    final advice = hasWarmWeather
+        ? 'Consider doing outdoor work during cooler hours and keep drinking water available.'
+        : 'Check the forecast again before planning outdoor work.';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: accent.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                hasWarmWeather
+                    ? Icons.thermostat_rounded
+                    : Icons.wb_sunny_outlined,
+                color: accent,
+                size: 24,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '7-day heat outlook',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1B3B36),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      heading,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: accent,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      details,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF374151),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${hottestDay.temperatureC.round()}°C',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: accent,
+                    ),
+                  ),
+                  Text(
+                    DateFormat('EEE').format(hottestDay.date),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: const Color(0xFF4A5568),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            advice,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: const Color(0xFF4A5568),
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'General temperature guidance only—not a crop heat-stress diagnosis. '
+            'The 32°C and 35°C flags are simple app thresholds.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: const Color(0xFF5A716A),
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

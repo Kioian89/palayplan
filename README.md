@@ -139,7 +139,7 @@ Users can email the developer directly from the **Settings** screen → **Contac
                                    │ REST API (HTTPS)
                                    ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                 PALAYPLAN BACKEND (FastAPI; Cloud Run target)               │
+│                 PALAYPLAN BACKEND (FastAPI; Render deployment)              │
 │                                                                             │
 │  Routers:                                                                   │
 │   ├── /weather/forecast   -> OWM API with auto-fallback to Open-Meteo       │
@@ -147,7 +147,7 @@ Users can email the developer directly from the **Settings** screen → **Contac
 │   ├── /predict/yield      -> HistGradientBoosting Yield Model v3 (R²=0.844) │
 │   └── /auth/              -> JWT Auth + Firebase Admin Token Verification   │
 │                                                                             │
-│  API URL: Configure API_BASE_URL with the deployed Cloud Run service URL    │
+│  API URL: https://palayplan-1.onrender.com                                  │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 

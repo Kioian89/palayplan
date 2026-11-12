@@ -23,7 +23,7 @@ jobs:
     name: Build Android APK
     runs-on: ubuntu-latest
     env:
-      API_BASE_URL: ${{ vars.API_BASE_URL }}
+      API_BASE_URL: ${{ vars.API_BASE_URL || 'https://palayplan-1.onrender.com' }}
       FIREBASE_API_KEY_ANDROID: ${{ secrets.FIREBASE_API_KEY_ANDROID }}
     permissions:
       contents: write
@@ -68,13 +68,6 @@ jobs:
       - name: Run unit & widget tests
         run: flutter test
         continue-on-error: true
-
-      - name: Validate API base URL
-        run: |
-          if [ -z "$API_BASE_URL" ]; then
-            echo "Set the repository Actions variable API_BASE_URL to the deployed API URL."
-            exit 1
-          fi
 
       - name: Validate Firebase API key
         if: github.event_name != 'pull_request'

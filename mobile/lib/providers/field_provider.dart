@@ -38,6 +38,7 @@ class FieldProvider extends ChangeNotifier {
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
       _firestoreSubscription;
   String? _userId;
+  String? _loadedUserId;
   int _loadGeneration = 0;
   String? _cloudSyncError;
 
@@ -52,6 +53,7 @@ class FieldProvider extends ChangeNotifier {
   int get activeFieldIndex => _activeFieldIndex;
   int get fieldCount => _fields.length;
   String? get cloudSyncError => _cloudSyncError;
+  bool isLoadedForUser(String uid) => _loadedUserId == uid;
 
   DocumentReference<Map<String, dynamic>> _cloudDocument(String uid) =>
       _firestore!
@@ -123,11 +125,13 @@ class FieldProvider extends ChangeNotifier {
 
       if (generation != _loadGeneration) return;
       if (stored != null) _applyStored(stored);
+      _loadedUserId = uid;
       notifyListeners();
       return;
     }
 
     _applyStored(stored ?? _StoredFields.defaults());
+    _loadedUserId = uid;
     notifyListeners();
   }
 
@@ -264,6 +268,7 @@ class FieldProvider extends ChangeNotifier {
     _userId = uid;
     final generation = ++_loadGeneration;
     _cloudSyncError = null;
+    _loadedUserId = null;
     await _firestoreSubscription?.cancel();
     if (generation != _loadGeneration) return;
     _firestoreSubscription = null;
