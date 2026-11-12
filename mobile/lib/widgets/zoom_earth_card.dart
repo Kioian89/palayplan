@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import '../models/field_model.dart';
 import '../services/zoom_earth_service.dart';

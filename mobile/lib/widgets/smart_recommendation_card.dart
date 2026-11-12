@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import '../services/recommendation_service.dart';
 import '../l10n/app_strings.dart';
 

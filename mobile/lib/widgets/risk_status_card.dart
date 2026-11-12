@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 
 /// Modern, high-contrast, accessible risk status card.
 /// Designed for field clarity and quick farmer comprehension.

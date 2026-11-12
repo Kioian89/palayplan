@@ -6,7 +6,7 @@
 //   Text(s.appName);
 // ─────────────────────────────────────────────────────────────────────────────
 
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import '../providers/language_provider.dart';
 
 /// Convenience accessor so any Widget can call `AppStrings.of(context)`.
