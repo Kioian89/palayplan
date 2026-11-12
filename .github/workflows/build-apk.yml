@@ -22,6 +22,8 @@ jobs:
   build:
     name: Build Android APK
     runs-on: ubuntu-latest
+    env:
+      API_BASE_URL: ${{ vars.API_BASE_URL }}
     permissions:
       contents: write
     defaults:
@@ -66,6 +68,13 @@ jobs:
         run: flutter test
         continue-on-error: true
 
+      - name: Validate API base URL
+        run: |
+          if [ -z "$API_BASE_URL" ]; then
+            echo "Set the repository Actions variable API_BASE_URL to the deployed API URL."
+            exit 1
+          fi
+
       - name: Publish Shorebird OTA Patch
         if: "${{ github.event.inputs.build_type == 'patch' }}"
         env:
@@ -74,7 +83,7 @@ jobs:
           shorebird patch android \
             --allow-asset-diffs \
             --allow-native-diffs \
-            --dart-define=API_BASE_URL=https://palayplan.onrender.com
+            --dart-define="API_BASE_URL=$API_BASE_URL"
 
       - name: Build APK (Release / Shorebird)
         if: "${{ github.event.inputs.build_type != 'debug' && github.event.inputs.build_type != 'patch' }}"
@@ -84,18 +93,18 @@ jobs:
           if [ -n "$SHOREBIRD_TOKEN" ] && ([ "${{ startsWith(github.ref, 'refs/tags/v') }}" = "true" ] || [ "${{ github.event.inputs.build_type }}" = "release" ]); then
             echo "Building with Shorebird release..."
             shorebird release android --artifact apk \
-              --dart-define=API_BASE_URL=https://palayplan.onrender.com
+              --dart-define="API_BASE_URL=$API_BASE_URL"
           else
             echo "Building standard release APK..."
             flutter build apk --release \
-              --dart-define=API_BASE_URL=https://palayplan.onrender.com
+              --dart-define="API_BASE_URL=$API_BASE_URL"
           fi
 
       - name: Build APK (Debug)
         if: "${{ github.event.inputs.build_type == 'debug' }}"
         run: |
           flutter build apk --debug \
-            --dart-define=API_BASE_URL=https://palayplan.onrender.com
+            --dart-define="API_BASE_URL=$API_BASE_URL"
 
       - name: Upload APK Artifact
         if: "${{ github.event.inputs.build_type != 'patch' }}"

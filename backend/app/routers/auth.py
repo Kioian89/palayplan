@@ -52,18 +52,21 @@ def _firebase_app():
     try:
         return firebase_admin.get_app()
     except ValueError:
-        credentials_path = Path(settings.firebase_credentials_path).expanduser()
-        if not credentials_path.is_file():
-            raise HTTPException(
-                status_code=503,
-                detail=(
-                    "Firebase authentication is not configured. "
-                    "Set FIREBASE_CREDENTIALS_PATH to a service-account JSON file."
-                ),
-            )
-        return firebase_admin.initialize_app(
-            credentials.Certificate(str(credentials_path))
-        )
+        credentials_path = settings.firebase_credentials_path.strip()
+        if credentials_path:
+            path = Path(credentials_path).expanduser()
+            if not path.is_file():
+                raise HTTPException(
+                    status_code=503,
+                    detail=(
+                        "Firebase authentication is not configured. "
+                        "FIREBASE_CREDENTIALS_PATH does not point to a service-account file."
+                    ),
+                )
+            return firebase_admin.initialize_app(credentials.Certificate(str(path)))
+
+        # Cloud Run supplies Application Default Credentials to its service account.
+        return firebase_admin.initialize_app()
 
 
 def _verify_firebase_id_token(token: str) -> dict:

@@ -115,10 +115,13 @@ To publish an update, increment `version` in `pubspec.yaml`, build with
 matches that version (for example, `v0.1.1`).
 
 The GitHub Actions workflow at `.github/workflows/build-apk.yml` builds APKs
-with the deployed Render backend URL. It runs on pushes to `main`/`master`, pull
-requests, and version tags; a manual run is also available from the Actions tab.
-Download the APK from the completed workflow run's **Artifacts** section.
-Version-tag builds also attach the APK to the corresponding GitHub Release.
+with the URL configured in the repository's `API_BASE_URL` variable. Set it to
+the Cloud Run service URL before running the workflow; see `backend/README.md`.
+The workflow runs on
+pushes to `main`/`master`, pull requests, and version tags; a manual run is also
+available from the Actions tab. Download the APK from the completed workflow
+run's **Artifacts** section. Version-tag builds also attach the APK to the
+corresponding GitHub Release.
 The workflow uses the Android Firebase options configured in
 `lib/services/firebase_options.dart`; no repository Actions secrets are
 required for the current Android configuration.

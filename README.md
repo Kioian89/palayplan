@@ -35,6 +35,8 @@
 
 The application is built **offline-first**, ensuring that smallholder farmers in rural provincial fields with intermittent cell reception can continue scanning crops, managing cropping schedules, and monitoring field recommendations without an active internet connection.
 
+For a deeper engineering overview of the architecture, ML components, and service model, see the capstone-style technical background document at [docs/technical-background.md](./docs/technical-background.md).
+
 ---
 
 ## 🆕 What's New in v0.3.1
@@ -137,7 +139,7 @@ Users can email the developer directly from the **Settings** screen → **Contac
                                    │ REST API (HTTPS)
                                    ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                       PALAYPLAN BACKEND (FastAPI on Render)                 │
+│                 PALAYPLAN BACKEND (FastAPI; Cloud Run target)               │
 │                                                                             │
 │  Routers:                                                                   │
 │   ├── /weather/forecast   -> OWM API with auto-fallback to Open-Meteo       │
@@ -145,7 +147,7 @@ Users can email the developer directly from the **Settings** screen → **Contac
 │   ├── /predict/yield      -> HistGradientBoosting Yield Model v3 (R²=0.844) │
 │   └── /auth/              -> JWT Auth + Firebase Admin Token Verification   │
 │                                                                             │
-│  Live API: https://palayplan.onrender.com/docs                              │
+│  API URL: Configure API_BASE_URL with the deployed Cloud Run service URL    │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -247,7 +249,7 @@ palayplan/
    uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    ```
    - Interactive API docs: `http://localhost:8000/docs`
-   - Production API: `https://palayplan.onrender.com/docs`
+   - Production API: Set the repository Actions variable `API_BASE_URL` to the deployed Cloud Run service URL.
 
 ---
 
